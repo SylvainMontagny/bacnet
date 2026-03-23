@@ -11,7 +11,7 @@
         "id": "1fa7db01dd439534",
         "type": "function",
         "z": "cbd1f30a3151709a",
-        "name":  "bacnet_client_scheduleRead",
+        "name":   "bacnet_client_scheduleRead",
         "func": "let client =  new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nif (!client) {\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE\n        );\n\n        const weekly = (value.values[0]?.value) || [];\n        \n        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];\n        \n        const result = {};\n        weekly.forEach((day, index) => {\n            result[days[index]] = day;\n        });\n\n        node.warn(JSON.stringify(result, null, 2));\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
