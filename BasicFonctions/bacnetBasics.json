@@ -1,6 +1,6 @@
 [
     {
-        "id":   "cbd1f30a3151709a",
+        "id": "cbd1f30a3151709a",
         "type": "tab",
         "label": "Essais bacnet-js",
         "disabled": false,
@@ -8,10 +8,83 @@
         "env": []
     },
     {
+        "id": "4b6f8e78414b6629",
+        "type": "group",
+        "z": "cbd1f30a3151709a",
+        "name": "TrendLog",
+        "style": {
+            "fill": "#ffffbf",
+            "label": true,
+            "label-position": "n",
+            "color": "#000000"
+        },
+        "nodes": [
+            "a3301fcfd6d4dc76",
+            "0c8e778bc06752cf",
+            "8803f82918808746",
+            "93db22e1fad02683",
+            "9ac974110b261e7c",
+            "15dfbe2becf159f4"
+        ],
+        "x": 134,
+        "y": 419,
+        "w": 632,
+        "h": 122
+    },
+    {
+        "id": "483b6848bf879f23",
+        "type": "group",
+        "z": "cbd1f30a3151709a",
+        "name": "ExeptionSchedule",
+        "style": {
+            "fill": "#ffffbf",
+            "label": true,
+            "label-position": "n",
+            "color": "#000000"
+        },
+        "nodes": [
+            "08f98d33ddc9031e",
+            "b15c52a89b7ada9b",
+            "05f30c31d8661a10",
+            "503738150d9543e6",
+            "2c785d5a5cdfd0b2",
+            "1024d585ae680e29"
+        ],
+        "x": 124,
+        "y": 279,
+        "w": 642,
+        "h": 122
+    },
+    {
+        "id": "11079a44a63e22cc",
+        "type": "group",
+        "z": "cbd1f30a3151709a",
+        "name": "Schedule",
+        "style": {
+            "fill": "#ffffbf",
+            "label": true,
+            "label-position": "n",
+            "color": "#000000"
+        },
+        "nodes": [
+            "1fa7db01dd439534",
+            "688d30db47432c9f",
+            "fcb358c4348c7995",
+            "de309e95fedd8eeb",
+            "14a54fed971f7149",
+            "789c2b2437977980"
+        ],
+        "x": 124,
+        "y": 139,
+        "w": 642,
+        "h": 122
+    },
+    {
         "id": "1fa7db01dd439534",
         "type": "function",
         "z": "cbd1f30a3151709a",
-        "name":   "bacnet_client_scheduleRead",
+        "g": "11079a44a63e22cc",
+        "name": "bacnet_client_scheduleRead",
         "func": "let client =  new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nif (!client) {\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE\n        );\n\n        const weekly = (value.values[0]?.value) || [];\n        \n        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];\n        \n        const result = {};\n        weekly.forEach((day, index) => {\n            result[days[index]] = day;\n        });\n\n        node.warn(JSON.stringify(result, null, 2));\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
@@ -24,8 +97,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 420,
-        "y": 280,
+        "x": 440,
+        "y": 180,
         "wires": [
             [
                 "688d30db47432c9f"
@@ -33,38 +106,10 @@
         ]
     },
     {
-        "id": "e7902ca9dc7adc53",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 280,
-        "wires": [
-            [
-                "1fa7db01dd439534"
-            ]
-        ]
-    },
-    {
         "id": "688d30db47432c9f",
         "type": "debug",
         "z": "cbd1f30a3151709a",
+        "g": "11079a44a63e22cc",
         "name": "debug 9",
         "active": true,
         "tosidebar": true,
@@ -73,14 +118,15 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 280,
+        "x": 660,
+        "y": 180,
         "wires": []
     },
     {
         "id": "a3301fcfd6d4dc76",
         "type": "function",
         "z": "cbd1f30a3151709a",
+        "g": "4b6f8e78414b6629",
         "name": "bacnet_client_TrendLogRead",
         "func": "let client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nif (!client) \n{\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nfunction decodeTrendLog(buffer) {\n    const records = [];\n    const buf = Array.from(buffer);\n    let i = 0;\n    while (i + 21 < buf.length) {\n        if (buf[i] !== 14 || buf[i+1] !== 164) { i++; continue; }\n        if (buf[i+20] !== 4 || buf[i+21] !== 0) { i++; continue; }\n        const year   = 1900 + buf[i+2];\n        const month  = buf[i+3];\n        const day    = buf[i+4];\n        const hour   = buf[i+7];\n        const minute = buf[i+8];\n        const second = buf[i+9];\n        const timestamp = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')} ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:${String(second).padStart(2,'0')}`;\n        const valBuffer = Buffer.from(buf.slice(i+14, i+18));\n        const value = parseFloat(valBuffer.readFloatBE(0).toFixed(4));\n        records.push({ timestamp, value });\n        i += 22;\n    }\n    return records;\n}\n\nasync function main() {\n    try {\n        const dateFrom = new Date('2026-03-03T10:00:00');\n        const chunkSize = 20;\n\n        const recordCountResult = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n            bacnet.PropertyIdentifier.RECORD_COUNT\n        );\n        const totalCount = recordCountResult.values?.[0]?.value;\n        node.warn(`RECORD_COUNT: ${totalCount}`);\n\n        let allRecords = [];\n        let currentIndex = totalCount;\n        let done = false;\n        let chunk = 0;\n\n        while (currentIndex > 0 && !done) {\n            chunk++;\n            const startIndex = Math.max(1, currentIndex - chunkSize + 1);\n            const count = currentIndex - startIndex + 1;\n\n            node.warn(`Chunk ${chunk}: readRange [${startIndex} → ${currentIndex}] (${count} entrées)`);\n\n            const response = await client.readRange(\n                address,\n                { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                startIndex, count,\n                { maxSegments: bacnet.MaxSegmentsAccepted.SEGMENTS_65 }\n            );\n\n            const records = decodeTrendLog(response.rangeBuffer);\n            node.warn(`Chunk ${chunk}: décodé ${records.length} entrées | ${records[0]?.timestamp} → ${records[records.length-1]?.timestamp}`);\n\n            const filtered = records.filter(r => new Date(r.timestamp) >= dateFrom);\n            node.warn(`Chunk ${chunk}: ${filtered.length} entrées >= dateFrom`);\n            allRecords = filtered.concat(allRecords);\n\n            if (filtered.length < records.length) {\n                node.warn(`Chunk ${chunk}: dateFrom atteinte, arrêt`);\n                done = true;\n            }\n\n            currentIndex = startIndex - 1;\n        }\n\n        node.warn(`RÉSULTAT: ${allRecords.length} enregistrements`);\n        node.send({ payload: allRecords });\n\n    } catch (err) {\n        node.error('Erreur: ' + err.message);\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
@@ -94,8 +140,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 420,
-        "y": 540,
+        "x": 400,
+        "y": 460,
         "wires": [
             [
                 "0c8e778bc06752cf"
@@ -103,38 +149,10 @@
         ]
     },
     {
-        "id": "42b17f79bf647cd4",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 540,
-        "wires": [
-            [
-                "a3301fcfd6d4dc76"
-            ]
-        ]
-    },
-    {
         "id": "0c8e778bc06752cf",
         "type": "debug",
         "z": "cbd1f30a3151709a",
+        "g": "4b6f8e78414b6629",
         "name": "debug 11",
         "active": true,
         "tosidebar": true,
@@ -143,14 +161,15 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 540,
+        "x": 660,
+        "y": 460,
         "wires": []
     },
     {
         "id": "8803f82918808746",
         "type": "function",
         "z": "cbd1f30a3151709a",
+        "g": "4b6f8e78414b6629",
         "name": "bacnet_client_TrendLogRead",
         "func": "const client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: flow.get('ip') + \":\" + flow.get('port') };\nconst deviceId = 'SDEY_productionPV';\n\nconst MAX_RETRIES = 3;\nconst RETRY_DELAY_MS = 2000;\n\nasync function withRetry(label, fn) {\n    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {\n        try {\n            return await fn();\n        } catch (err) {\n            node.warn(`[RETRY] ${label} — tentative ${attempt}/${MAX_RETRIES} échouée: ${err.message}`);\n            if (attempt === MAX_RETRIES) throw err;\n            await new Promise(res => setTimeout(res, RETRY_DELAY_MS * attempt));\n        }\n    }\n}\n\nfunction decodeTrendLog(buffer) {\n    const records = [];\n    const buf = Array.from(buffer);\n    let i = 0;\n    while (i + 21 < buf.length) {\n        if (buf[i] !== 14 || buf[i + 1] !== 164) { i++; continue; }\n        if (buf[i + 20] !== 4 || buf[i + 21] !== 0) { i++; continue; }\n        const year = 1900 + buf[i + 2];\n        const month = buf[i + 3];\n        const day = buf[i + 4];\n        const hour = buf[i + 7];\n        const minute = buf[i + 8];\n        const second = buf[i + 9];\n        const timestamp = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;\n        const valBuffer = Buffer.from(buf.slice(i + 14, i + 18));\n        const value = parseFloat(valBuffer.readFloatBE(0).toFixed(4));\n        records.push({ timestamp, value });\n        i += 22;\n    }\n    return records;\n}\n\nasync function main() {\n    try {\n        const dateFrom = new Date('2026-03-05T10:00:00');\n        const chunkSize = 20;\n\n        const recordCountResult = await withRetry('readProperty RECORD_COUNT', () =>\n            client.readProperty(\n                address,\n                { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                bacnet.PropertyIdentifier.RECORD_COUNT\n            )\n        );\n        const totalCount = recordCountResult.values?.[0]?.value;\n        node.warn(`RECORD_COUNT: ${totalCount}`);\n\n        let allRecords = [];\n        let currentIndex = totalCount;\n        let done = false;\n        let chunk = 0;\n\n        node.status({ fill: 'blue', shape: 'ring', text: 'Lecture en cours...' });\n\n        while (currentIndex > 0 && !done) {\n            chunk++;\n            const startIndex = Math.max(1, currentIndex - chunkSize + 1);\n            const count = currentIndex - startIndex + 1;\n\n            node.warn(`Chunk ${chunk}: readRange [${startIndex} → ${currentIndex}] (${count} entrées)`);\n\n            const response = await withRetry(`readRange chunk ${chunk} [${startIndex}→${currentIndex}]`, () =>\n                client.readRange(\n                    address,\n                    { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                    startIndex, count,\n                    { maxSegments: bacnet.MaxSegmentsAccepted.SEGMENTS_65 }\n                )\n            );\n\n            const records = decodeTrendLog(response.rangeBuffer);\n            node.warn(`Chunk ${chunk}: décodé ${records.length} entrées | ${records[0]?.timestamp} → ${records[records.length - 1]?.timestamp}`);\n\n            const filtered = records.filter(r => new Date(r.timestamp) >= dateFrom);\n            node.warn(`Chunk ${chunk}: ${filtered.length} entrées >= dateFrom`);\n            allRecords = filtered.concat(allRecords);\n\n            if (filtered.length < records.length) {\n                node.warn(`Chunk ${chunk}: dateFrom atteinte, arrêt`);\n                done = true;\n            }\n\n            currentIndex = startIndex - 1;\n        }\n\n        node.warn(`RÉSULTAT: ${allRecords.length} enregistrements`);\n\n        if (allRecords.length > 0) {\n            const values = allRecords.map(r =>\n                `('${r.timestamp}', '${deviceId}', ${r.value})`\n            ).join(', ');\n\n            node.send({\n                query: `INSERT INTO data(time, id, value) VALUES ${values} ON CONFLICT DO NOTHING;`,\n                debug: {\n                    recordCount: allRecords.length,\n                    firstRecord: allRecords[0],\n                    lastRecord: allRecords[allRecords.length - 1]\n                }\n            });\n\n            node.status({ fill: 'green', shape: 'dot', text: `${allRecords.length} records insérés` });\n        } else {\n            node.status({ fill: 'yellow', shape: 'dot', text: 'Aucun enregistrement trouvé' });\n        }\n\n    } catch (err) {\n        node.error('Erreur: ' + err.message);\n        node.status({ fill: 'red', shape: 'dot', text: 'Erreur: ' + err.message });\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
@@ -164,8 +183,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 420,
-        "y": 580,
+        "x": 400,
+        "y": 500,
         "wires": [
             [
                 "93db22e1fad02683"
@@ -173,38 +192,10 @@
         ]
     },
     {
-        "id": "8f3e463a1fc5b91a",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 580,
-        "wires": [
-            [
-                "8803f82918808746"
-            ]
-        ]
-    },
-    {
         "id": "93db22e1fad02683",
         "type": "debug",
         "z": "cbd1f30a3151709a",
+        "g": "4b6f8e78414b6629",
         "name": "debug 12",
         "active": true,
         "tosidebar": true,
@@ -213,14 +204,15 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 580,
+        "x": 660,
+        "y": 500,
         "wires": []
     },
     {
         "id": "08f98d33ddc9031e",
         "type": "function",
         "z": "cbd1f30a3151709a",
+        "g": "483b6848bf879f23",
         "name": "bacnet_client_ExceptionRead",
         "func": "const client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 5001 },\n            bacnet.PropertyIdentifier.EXCEPTION_SCHEDULE\n        );\n\n        node.warn('RAW VALUE: ' + JSON.stringify(value, null, 2));\n\n        const exceptions = (value.values[0]?.value) || [];\n\n        const result = exceptions.map((specialEvent, index) => {\n            // Inspecter chaque événement brut\n\n            // La structure peut être à un niveau différent selon le device/lib\n            const raw = specialEvent?.value ?? specialEvent;\n            const period = raw?.period ?? raw?.calendarEntry ?? raw;\n            const timeValues = (raw?.listOfTimeValues || raw?.timeValues || []).map(tv => ({\n                time: tv?.time,\n                value: tv?.value\n            }));\n            node.warn(raw);\n            return {\n                index,\n                raw,\n                period,\n                timeValues,\n                priority: raw?.eventPriority ?? raw?.priority\n            };\n\n        });\n\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
@@ -234,8 +226,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 430,
-        "y": 400,
+        "x": 410,
+        "y": 320,
         "wires": [
             [
                 "b15c52a89b7ada9b"
@@ -243,38 +235,10 @@
         ]
     },
     {
-        "id": "c30401dd599a889f",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 400,
-        "wires": [
-            [
-                "08f98d33ddc9031e"
-            ]
-        ]
-    },
-    {
         "id": "b15c52a89b7ada9b",
         "type": "debug",
         "z": "cbd1f30a3151709a",
+        "g": "483b6848bf879f23",
         "name": "debug 13",
         "active": true,
         "tosidebar": true,
@@ -283,14 +247,15 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 400,
+        "x": 660,
+        "y": 320,
         "wires": []
     },
     {
         "id": "fcb358c4348c7995",
         "type": "function",
         "z": "cbd1f30a3151709a",
+        "g": "11079a44a63e22cc",
         "name": "bacnet_client_scheduleWrite",
         "func": "const client = new bacnet.default({ apduTimeout: 10000, broadcastAddress: flow.get('ipBroadcast') });       \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip') + \":\" + flow.get('port') };\n\n// Helper pour créer un objet Date avec l'heure souhaitée\nfunction makeTime(hour, minute) {\n    const d = new Date();\n    d.setHours(hour, minute, 0, 0);\n    return d;\n}\n\nconst weeklySchedule = [\n    // Lundi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Mardi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Mercredi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Jeudi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Vendredi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Samedi\n    [],\n    // Dimanche\n    [],\n];\n\nasync function main() {\n    try {\n        await client.writeProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE,\n            weeklySchedule,\n            { priority: 16 }\n        );\n\n        node.warn('Écriture WEEKLY_SCHEDULE réussie');\n        node.send({ payload: 'OK' });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
@@ -304,8 +269,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 420,
-        "y": 320,
+        "x": 440,
+        "y": 220,
         "wires": [
             [
                 "de309e95fedd8eeb"
@@ -313,38 +278,10 @@
         ]
     },
     {
-        "id": "1de3ec3141c49310",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 320,
-        "wires": [
-            [
-                "fcb358c4348c7995"
-            ]
-        ]
-    },
-    {
         "id": "de309e95fedd8eeb",
         "type": "debug",
         "z": "cbd1f30a3151709a",
+        "g": "11079a44a63e22cc",
         "name": "debug 14",
         "active": true,
         "tosidebar": true,
@@ -353,14 +290,15 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 320,
+        "x": 660,
+        "y": 220,
         "wires": []
     },
     {
         "id": "05f30c31d8661a10",
         "type": "function",
         "z": "cbd1f30a3151709a",
+        "g": "483b6848bf879f23",
         "name": "bacnet_client_ExceptionWrite",
         "func": "const client = new bacnet.default({ apduTimeout: 10000, broadcastAddress: flow.get('ipBroadcast') });       \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nconst exceptionSchedule = [\n    {\n        date: {\n            type: 10,                        // ApplicationTag.DATE\n            value: new Date(2026, 2, 18),    // mois 0-indexé : 2 = Mars\n        },\n        events: [\n            {\n                time: {\n                    type: 11,                // ApplicationTag.TIME\n                    value: new Date(2026, 2, 10, 8, 0),\n                },\n                value: { type: 4, value: 2.0 },  // ApplicationTag.REAL\n            },\n            {\n                time: {\n                    type: 11,\n                    value: new Date(2026, 2, 10, 18, 0),\n                },\n                value: { type: 4, value: 0.0 },\n            },\n        ],\n        priority: { type: 2, value: 16 },   // ApplicationTag.UNSIGNED_INTEGER\n    }\n];\n\nasync function main() {\n    try {\n        await client.writeProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 5001 },\n            bacnet.PropertyIdentifier.EXCEPTION_SCHEDULE,\n            exceptionSchedule,\n            {}\n        );\n        node.warn(exceptionSchedule);\n        node.warn('Écriture EXCEPTION_SCHEDULE réussie');\n        node.send({ payload: 'OK' });\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
@@ -374,8 +312,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 430,
-        "y": 440,
+        "x": 410,
+        "y": 360,
         "wires": [
             [
                 "503738150d9543e6"
@@ -383,38 +321,10 @@
         ]
     },
     {
-        "id": "ee547844f52d0700",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 440,
-        "wires": [
-            [
-                "05f30c31d8661a10"
-            ]
-        ]
-    },
-    {
         "id": "503738150d9543e6",
         "type": "debug",
         "z": "cbd1f30a3151709a",
+        "g": "483b6848bf879f23",
         "name": "debug 15",
         "active": true,
         "tosidebar": true,
@@ -424,8 +334,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 440,
+        "x": 660,
+        "y": 360,
         "wires": []
     },
     {
@@ -445,40 +355,11 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 420,
-        "y": 200,
+        "x": 440,
+        "y": 100,
         "wires": [
             [
                 "7a5422edb9ef4ec9"
-            ]
-        ]
-    },
-    {
-        "id": "d0910da7171537e5",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 200,
-        "wires": [
-            [
-                "9e1d2d2ad860be3d"
             ]
         ]
     },
@@ -494,79 +375,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 680,
-        "y": 200,
-        "wires": []
-    },
-    {
-        "id": "05925b4a87509e78",
-        "type": "function",
-        "z": "cbd1f30a3151709a",
-        "name": "bacnet_clientClose",
-        "func": "let client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \nclient.close();\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [
-            {
-                "var": "bacnet",
-                "module": "@bacnet-js/client"
-            }
-        ],
-        "x": 390,
-        "y": 120,
-        "wires": [
-            [
-                "3fc31ee4551f6c3e"
-            ]
-        ]
-    },
-    {
-        "id": "9919bcc2f60ba5c2",
-        "type": "inject",
-        "z": "cbd1f30a3151709a",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 130,
-        "y": 120,
-        "wires": [
-            [
-                "05925b4a87509e78"
-            ]
-        ]
-    },
-    {
-        "id": "3fc31ee4551f6c3e",
-        "type": "debug",
-        "z": "cbd1f30a3151709a",
-        "name": "debug 10",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 680,
-        "y": 120,
+        "x": 760,
+        "y": 100,
         "wires": []
     },
     {
@@ -574,17 +384,231 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "TO CONFIGURE",
-        "func": "msg.config = flow.get('ip') + \":\" + flow.get('port')\nreturn msg;",
+        "func": "flow.set('ip', \"192.168.1.109\");\nflow.set('port', \"47808\");\nflow.set('ipBroadcast', \"192.168.1.255\");\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
-        "initialize": "// Le code ajouté ici sera exécuté une fois\n// à chaque démarrage du noeud.\nflow.set('ip', \"192.168.1.109\");\nflow.set('port', \"47808\");\nflow.set('ipBroadcast', \"192.168.1.255\");\n\n",
+        "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 150,
+        "x": 390,
         "y": 40,
         "wires": [
             []
         ]
+    },
+    {
+        "id": "ceeeddb30a959012",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 195,
+        "y": 40,
+        "wires": [
+            [
+                "a34cd5e9ba25bac9"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1bdc4c588740a202",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 185,
+        "y": 100,
+        "wires": [
+            [
+                "9e1d2d2ad860be3d"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "14a54fed971f7149",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "g": "11079a44a63e22cc",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 185,
+        "y": 180,
+        "wires": [
+            [
+                "1fa7db01dd439534"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "2c785d5a5cdfd0b2",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "g": "483b6848bf879f23",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 185,
+        "y": 320,
+        "wires": [
+            [
+                "08f98d33ddc9031e"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "789c2b2437977980",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "g": "11079a44a63e22cc",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 185,
+        "y": 220,
+        "wires": [
+            [
+                "fcb358c4348c7995"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "1024d585ae680e29",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "g": "483b6848bf879f23",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 185,
+        "y": 360,
+        "wires": [
+            [
+                "05f30c31d8661a10"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "9ac974110b261e7c",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "g": "4b6f8e78414b6629",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 195,
+        "y": 460,
+        "wires": [
+            [
+                "a3301fcfd6d4dc76"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "15dfbe2becf159f4",
+        "type": "inject",
+        "z": "cbd1f30a3151709a",
+        "g": "4b6f8e78414b6629",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 195,
+        "y": 500,
+        "wires": [
+            [
+                "8803f82918808746"
+            ]
+        ],
+        "l": false
     }
 ]

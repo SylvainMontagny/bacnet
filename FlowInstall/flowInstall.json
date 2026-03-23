@@ -1,0 +1,1400 @@
+[
+    {
+        "id": "ca05722bab3f9dfc",
+        "type": "tab",
+        "label": "Flux 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "f4445051912658d1",
+        "type": "group",
+        "z": "ca05722bab3f9dfc",
+        "name": "user interface",
+        "style": {
+            "label": true,
+            "stroke": "#ffC000",
+            "fill": "#ffC000",
+            "fill-opacity": "0.3",
+            "color": "#000000"
+        },
+        "nodes": [
+            "0cfe454006d8317a",
+            "5be91975552783db",
+            "351df29e713ae824",
+            "704038266f6d1d35",
+            "1634cc60f1379fe2",
+            "68de43a35b4b3613",
+            "fe7d32a45009afca"
+        ],
+        "x": 14,
+        "y": 139,
+        "w": 732,
+        "h": 162
+    },
+    {
+        "id": "b16f7ec5efc09ae2",
+        "type": "group",
+        "z": "ca05722bab3f9dfc",
+        "name": "DO NOT modify",
+        "style": {
+            "stroke": "#000000",
+            "fill": "#dbcbe7",
+            "label": true,
+            "fill-opacity": "0.35",
+            "color": "#000000"
+        },
+        "nodes": [
+            "ad953a59137e678a",
+            "9ff47e4845576194"
+        ],
+        "x": 768,
+        "y": 33,
+        "w": 1424,
+        "h": 614
+    },
+    {
+        "id": "ad953a59137e678a",
+        "type": "group",
+        "z": "ca05722bab3f9dfc",
+        "g": "b16f7ec5efc09ae2",
+        "name": "DELETE Containers/Volumes",
+        "style": {
+            "stroke": "#ff3f3f",
+            "fill": "#ffbfbf",
+            "fill-opacity": "0.5",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "7e982ccc65c1dc2e",
+            "f7a47a6bae22c267",
+            "8d3445e0fab88cef",
+            "16bc1ef3c8fa2ff1",
+            "43bd090a686b4c4b",
+            "b2960abeb4fa489e",
+            "e7fe366260900258",
+            "09f475175560ef0d",
+            "c659047dce34a9a3",
+            "133e3fb497191699",
+            "bac162de33702f2c",
+            "5a19f6470f9aa8ec",
+            "52b115fa3116d044",
+            "98c1756a204c6098",
+            "bedca2a10beb0385",
+            "84307e0f8edeb6ce",
+            "07bf1be354c70987",
+            "3332028b7d347afb",
+            "f801e8b68eb7ee78",
+            "69f0cffa389f89fb",
+            "305399dd2b638369",
+            "b023b47856efbfae",
+            "dc68782c5594b482"
+        ],
+        "x": 794,
+        "y": 299,
+        "w": 1372,
+        "h": 322
+    },
+    {
+        "id": "9ff47e4845576194",
+        "type": "group",
+        "z": "ca05722bab3f9dfc",
+        "g": "b16f7ec5efc09ae2",
+        "name": "CREATE Containers",
+        "style": {
+            "stroke": "#0070c0",
+            "fill": "#3f93cf",
+            "fill-opacity": "0.25",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "f1358d5304c82f32",
+            "51ac831eaa9d8ccb",
+            "049352f0deec3d2a",
+            "904142670b98c8fc",
+            "cafb0b9b4458aa34",
+            "63a4c026a56fe091",
+            "47b4edfe0282811b",
+            "f892b63dac413ecd",
+            "fe50729a09ac5df1",
+            "ccf8c089e2e59525",
+            "a3edb67650e8d1fa",
+            "ddce8468e2891562",
+            "2043961b8d24834b",
+            "82f50747e0e1c90c",
+            "694c14799e13c890",
+            "868c0e8223925c7d",
+            "3e372f80aa529cd5",
+            "c739dfafa9984780",
+            "9b7414183d8350a1",
+            "4f62dde5e8a112d2"
+        ],
+        "x": 794,
+        "y": 59,
+        "w": 1352,
+        "h": 209.5
+    },
+    {
+        "id": "0cfe454006d8317a",
+        "type": "inject",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "START CHIRPSTACK",
+        "props": [
+            {
+                "p": "flowstate",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "x": 160,
+        "y": 180,
+        "wires": [
+            [
+                "5be91975552783db"
+            ]
+        ]
+    },
+    {
+        "id": "5be91975552783db",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "TO CONFIGURE CHIRPSTACK",
+        "func": "/*--------- GLOBAL CONFIGURATION ---------*/\n\nconst globalconfig =\n{\n    //flowmode = 0 : delete containers and images\n    //flowmode = 1 : create and start listed containers\n    flowmode: 1,\n    ip: \"192.168.1.109\",\n    httpAuth: \"Basic YWRtaW46dW5pdi1sb3Jhd2Fu\",\n    login: \"admin\",\n    password: \"univ-lorawan\",\n    network: \"chirpstack-net\"\n}\n\n/*--------- CONTAINERS CONFIGS ---------*/\n\nconst mosquittoConfig = {\n    \"HostConfig\": {\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" },\n        \"Binds\": [\n            \"mosquitto-volume:/mosquitto/config\",\n            \"mosquitto-data-volume:/mosquitto/data\",\n            \"mosquitto-log-volume:/mosquitto/log\"\n        ]\n    }\n};\n\n\nconst postgresConfig = {\n    \"Env\": [\"POSTGRES_PASSWORD=root\"],\n    \"HostConfig\": {\n        \"Binds\": [\n            \"postgres-volume:/docker-entrypoint-initdb.d\",\n            \"postgresdata-volume:/var/lib/postgresql/data\"\n        ],\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" }\n    }\n};\n\n\nconst redisConfig = {\n    \"Cmd\": [\"redis-server\", \"--save\", \"300\", \"1\", \"--save\", \"60\", \"100\", \"--appendonly\", \"no\"],\n    \"HostConfig\": {\n        \"Binds\": [\n            \"redis-volume:/redis\",\n            \"redisdata-volume:/data\"\n        ],\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" }\n    }\n};\n\n\nconst chirpstackConfig = {\n    \"User\": \"1000:1000\",\n    \"ExposedPorts\": { \"8080/tcp\": {} },\n    \"Env\": [\n        \"MQTT_BROKER_HOST=mosquitto\",\n        \"REDIS_HOST=redis\",\n        \"POSTGRESQL_HOST=postgres\"\n        ],\n    \"HostConfig\": {\n        \"Binds\": [\n            \"chirpstack-volume:/etc/chirpstack\",\n            \"lorawandevices-volume:/opt/lorawan-devices\"\n        ],\n        \"PortBindings\": { \"8080/tcp\": [{ \"HostPort\": \"50101\" }] },\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" },\n        \"Links\": [\"postgres:postgres-chirpstack-link\", \"mosquitto:mosquitto-chirpstack-link\", \"redis:redis-chirpstack-link\"]\n    },\n   \"Cmd\": [\"-c\", \"/etc/chirpstack\"]\n};\n\n\nconst gatewaybridgeConfig = {\n   \"ExposedPorts\": { \"1700/udp\": {} },\n    \"Env\": [\n     \"INTEGRATION__MQTT__EVENT_TOPIC_TEMPLATE=eu868/gateway/{{ .GatewayID }}/event/{{ .EventType }}\",\n     \"INTEGRATION__MQTT__STATE_TOPIC_TEMPLATE=eu868/gateway/{{ .GatewayID }}/state/{{ .StateType }}\",\n     \"INTEGRATION__MQTT__COMMAND_TOPIC_TEMPLATE=eu868/gateway/{{ .GatewayID }}/command/#\"\n    ],\n    \"HostConfig\": {\n        \"Binds\": [ \"gateway-bridge-volume:/etc/chirpstack-gateway-bridge\" ],\n        \"PortBindings\": { \"1700/udp\": [{ \"HostPort\": \"50103\" }] },\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" },\n        \"Links\": [\"mosquitto:mosquitto-gateway-link\"]\n   }\n};\n\n\n\nconst noderedConfig = {\n    \"HostConfig\": {\n        \"Binds\": [\"nodereddata-volume:/data\"],\n        \"PortBindings\": { \"1880/tcp\": [{ \"HostPort\": \"50102\" }] },\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" }\n    }\n};\n\n\nconst configUIConfig = {\n    \"User\": \"0:0\",  \n    \"Env\": [\n        \"PASSWORD=univ-lorawan\"\n    ],\n    \"HostConfig\": {\n        \"Binds\": [\n            \"mosquitto-volume:/workspace/mosquitto\",\n            \"chirpstack-volume:/workspace/chirpstack\",\n            \"gateway-bridge-volume:/workspace/gatewaybridge\"\n        ],\n        \"PortBindings\": { \"8080/tcp\": [{ \"HostPort\": \"50200\" }] },\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" }\n    },\n    \"WorkingDir\": \"/workspace\"\n};\nconst alpinePostgresConfig =\n{\n    \"Cmd\": [\n        \"sh\", \"-c\",\n        \"cat > /scripts/001-init-chirpstack.sh << 'EOF1'\\n#!/bin/bash\\nset -e\\npsql -v ON_ERROR_STOP=1 --username \\\"$POSTGRES_USER\\\" <<-EOSQL\\n    create role chirpstack with login password 'chirpstack';\\n    create database chirpstack with owner chirpstack;\\nEOSQL\\nEOF1\\n\\ncat > /scripts/002-chirpstack_extensions.sh << 'EOF2'\\n#!/bin/bash\\nset -e\\n\\npsql -v ON_ERROR_STOP=1 --username \\\"$POSTGRES_USER\\\" --dbname=\\\"chirpstack\\\" <<-EOSQL\\n    create extension pg_trgm;\\n    create extension hstore;\\nEOSQL\\nEOF2\\n\\nchmod +x /scripts/*.sh\\nchown 999:999 /scripts/*.sh\"\n    ],\n    \"HostConfig\": {\n        \"Binds\": [\"postgres-volume:/scripts\"],\n        \"AutoRemove\": false\n    }\n}\nconst alpineConfigInit = {\n  Cmd: [\n    \"sh\",\n    \"-c\",\n    `\nmkdir -p /workspace/mosquitto /workspace/chirpstack /workspace/gatewaybridge;\n\ncat << 'EOF' > /workspace/mosquitto/mosquitto.conf\nlistener 1883\nallow_anonymous true\nEOF\n\ncat << 'EOF' > /workspace/chirpstack/chirpstack.toml\n[logging]\nlevel=\"info\"\n\n[postgresql]\ndsn=\"postgres://chirpstack:chirpstack@$POSTGRESQL_HOST/chirpstack?sslmode=disable\"\nmax_open_connections=10\nmin_idle_connections=0\n\n[redis]\nservers=[\n  \"redis://$REDIS_HOST/\",\n]\ntls_enabled=false\ncluster=false\n\n[network]\nnet_id=\"000000\"\nget_downlink_data_delay=\"2000ms\"\nenabled_regions=[\n  \"as923\",\n  \"as923_2\",\n  \"as923_3\",\n  \"as923_4\",\n  \"au915_0\",\n  \"cn470_10\",\n  \"cn779\",\n  \"eu433\",\n  \"eu868\",\n  \"in865\",\n  \"ism2400\",\n  \"kr920\",\n  \"ru864\",\n  \"us915_0\",\n  \"us915_1\",\n]\n\n[api]\nbind=\"0.0.0.0:8080\"\nsecret=\"you-must-replace-this\"\n\n[integration]\nenabled=[\"mqtt\"]\n\n[integration.mqtt]\nserver=\"tcp://$MQTT_BROKER_HOST:1883/\"\njson=true\nEOF\n\ncat << 'EOF' > /workspace/chirpstack/region_eu868.toml\n[[regions]]\nid=\"eu868\"\ndescription=\"EU868\"\ncommon_name=\"EU868\"\n\n[regions.gateway]\nforce_gws_private=false\n\n[regions.gateway.backend]\nenabled=\"mqtt\"\n\n[regions.gateway.backend.mqtt]\ntopic_prefix=\"eu868\"\nserver=\"tcp://$MQTT_BROKER_HOST:1883\"\nusername=\"\"\npassword=\"\"\nqos=0\nclean_session=false\nclient_id=\"\"\nkeep_alive_interval=\"30s\"\nca_cert=\"\"\ntls_cert=\"\"\ntls_key=\"\"\n\n[[regions.gateway.channels]]\nfrequency=868100000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=868300000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=868500000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=867100000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=867300000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=867500000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=867700000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=867900000\nbandwidth=125000\nmodulation=\"LORA\"\nspreading_factors=[7,8,9,10,11,12]\n\n[[regions.gateway.channels]]\nfrequency=868300000\nbandwidth=250000\nmodulation=\"LORA\"\nspreading_factors=[7]\n\n[[regions.gateway.channels]]\nfrequency=868800000\nbandwidth=125000\nmodulation=\"FSK\"\ndatarate=50000\n\n[regions.network]\ninstallation_margin=10\nrx_window=0\nrx1_delay=5\nrx1_dr_offset=0\nrx2_dr=0\nrx2_frequency=869525000\nrx2_prefer_on_rx1_dr_lt=0\nrx2_prefer_on_link_budget=false\ndownlink_tx_power=-1\nadr_disabled=false\nmin_dr=0\nmax_dr=5\n\n[regions.network.rejoin_request]\nenabled=false\nmax_count_n=0\nmax_time_n=0\n\n[regions.network.class_b]\nping_slot_dr=3\nping_slot_frequency=0\n\n[[regions.network.extra_channels]]\nfrequency=867100000\nmin_dr=0\nmax_dr=5\n\n[[regions.network.extra_channels]]\nfrequency=867300000\nmin_dr=0\nmax_dr=5\n\n[[regions.network.extra_channels]]\nfrequency=867500000\nmin_dr=0\nmax_dr=5\n\n[[regions.network.extra_channels]]\nfrequency=867700000\nmin_dr=0\nmax_dr=5\n\n[[regions.network.extra_channels]]\nfrequency=867900000\nmin_dr=0\nmax_dr=5\nEOF\n\ncat << 'EOF' > /workspace/gatewaybridge/chirpstack-gateway-bridge.toml\n[integration.mqtt.auth.generic]\nservers=[\"tcp://mosquitto:1883\"]\nusername=\"\"\npassword=\"\"\nEOF\n`\n  ],\n  HostConfig: {\n    Binds: [\n      \"mosquitto-volume:/workspace/mosquitto\",\n      \"chirpstack-volume:/workspace/chirpstack\",\n      \"gateway-bridge-volume:/workspace/gatewaybridge\"\n    ]\n  }\n};\n\n\n/*------------- CONTAINERS -------------*/\n\nconst containerList = [\n    //Containers will be created in order, starting from containerList[0] until containerList[n]\n    { image: \"alpine:20260127\", config: alpineConfigInit, name: \"AlpineConfigInit\" },\n    { image: \"alpine:20260127\", config: alpinePostgresConfig, name: \"Alipinepostgres\" },\n    { image: \"codercom/code-server:4.112.0-39\", config: configUIConfig, name: \"vsCodeInBrowser\" },\n    { image: \"eclipse-mosquitto:2.0.21\", config: mosquittoConfig, name: \"mosquitto\" },\n    { image: \"postgres:15.12-alpine\", config: postgresConfig, name: \"postgres\" },\n    { image: \"redis:7-alpine\", config: redisConfig, name: \"redis\" },\n    { image: \"chirpstack/chirpstack:4.11\", config: chirpstackConfig, name: \"chirpstack\" },\n    { image: \"chirpstack/chirpstack-gateway-bridge:4.0.11\", config: gatewaybridgeConfig, name: \"gateway-bridge\" },\n    { image: \"montagny/node-red:1.2\", config: noderedConfig, name: \"nodered\" }\n];\n\nmsg.containerList = containerList;\nmsg.globalconfig = globalconfig;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 180,
+        "wires": [
+            [
+                "351df29e713ae824"
+            ]
+        ]
+    },
+    {
+        "id": "5847f07758779ad4",
+        "type": "catch",
+        "z": "ca05722bab3f9dfc",
+        "name": "CATCH",
+        "scope": null,
+        "uncaught": false,
+        "x": 290,
+        "y": 40,
+        "wires": [
+            [
+                "96ee1d9c21610a8f"
+            ]
+        ]
+    },
+    {
+        "id": "96ee1d9c21610a8f",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "name": "STOP FLOW",
+        "func": "flow.set('FlowStop', 0);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "flow.set('FlowStop', 1);",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 60,
+        "wires": [
+            [
+                "127b937ec793ac30"
+            ]
+        ]
+    },
+    {
+        "id": "eb84a5a7cfde3732",
+        "type": "inject",
+        "z": "ca05722bab3f9dfc",
+        "name": "Start",
+        "props": [
+            {
+                "p": "flowstate",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "x": 290,
+        "y": 80,
+        "wires": [
+            [
+                "96ee1d9c21610a8f"
+            ]
+        ]
+    },
+    {
+        "id": "351df29e713ae824",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "CheckMode",
+        "func": "if (msg.globalconfig.flowmode) \n{\n    flow.set('queueToken', 1); \n    flow.set('queueCount', 0);\n    return [msg, null];\n}\nelse \n{\n    return [null, msg];\n}\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 220,
+        "wires": [
+            [
+                "f1358d5304c82f32"
+            ],
+            [
+                "b2960abeb4fa489e"
+            ]
+        ]
+    },
+    {
+        "id": "7e982ccc65c1dc2e",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP POST",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1110,
+        "y": 400,
+        "wires": [
+            [
+                "c659047dce34a9a3"
+            ]
+        ]
+    },
+    {
+        "id": "f7a47a6bae22c267",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Stop container",
+        "func": "node.warn(msg.globalconfig.ip);\n\nlet containers = Object.values(msg.payload);\nlet index = 0;\n\ncontainers.keys();\n\nfor (let i = 0; i < containers.length; i++) {\n\n  let container = containers[i];\n\n  let tosend = {\n    globalconfig: msg.globalconfig,\n    msgNumber: index,\n    containername: container.key,\n    method: \"POST\",\n    url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers/stop\",\n\n    headers: {\n      Authorization: msg.globalconfig.httpAuth,\n      \"Content-Type\": \"application/json\"\n    },\n\n    payload: {\n      \"container-name\": container.key\n    }\n  };\n\n  node.send(tosend);\n  node.warn(`stopping container ${container.key} (${container.state})`);\n\n  index++;\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 400,
+        "wires": [
+            [
+                "7e982ccc65c1dc2e"
+            ]
+        ]
+    },
+    {
+        "id": "8d3445e0fab88cef",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Delete container",
+        "func": "msg.method = \"DELETE\";\nmsg.url = \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers/\" +  msg.containername;\n\nmsg.headers = {\n  Authorization: msg.globalconfig.httpAuth,\n  \"Content-Type\": \"application/json\"\n};\n\nmsg.payload = {\n  \"container-name\":  msg.containername,\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 460,
+        "wires": [
+            [
+                "16bc1ef3c8fa2ff1"
+            ]
+        ]
+    },
+    {
+        "id": "16bc1ef3c8fa2ff1",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP DELETE",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1160,
+        "y": 460,
+        "wires": [
+            [
+                "52b115fa3116d044"
+            ]
+        ]
+    },
+    {
+        "id": "43bd090a686b4c4b",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1070,
+        "y": 340,
+        "wires": [
+            [
+                "f7a47a6bae22c267"
+            ]
+        ]
+    },
+    {
+        "id": "b2960abeb4fa489e",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Read containers",
+        "func": "\nreturn {\n    \"globalconfig\": msg.globalconfig,\n    method: \"GET\",\n    url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers\",\n    headers: {\n        Authorization: msg.globalconfig.httpAuth,\n        \"Content-Type\": \"application/json\"\n    }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 340,
+        "wires": [
+            [
+                "43bd090a686b4c4b"
+            ]
+        ]
+    },
+    {
+        "id": "e7fe366260900258",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Read containers",
+        "func": "return {\n  \"containername\": msg.containername,\n  \"msgNumber\": msg.msgNumber,\n  \"globalconfig\": msg.globalconfig,\n  method: \"GET\",\n  url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers\",\n  headers: {\n    Authorization: msg.globalconfig.httpAuth,\n    \"Content-Type\": \"application/json\"\n  }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1460,
+        "y": 400,
+        "wires": [
+            [
+                "09f475175560ef0d"
+            ]
+        ]
+    },
+    {
+        "id": "09f475175560ef0d",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1650,
+        "y": 400,
+        "wires": [
+            [
+                "133e3fb497191699"
+            ]
+        ]
+    },
+    {
+        "id": "c659047dce34a9a3",
+        "type": "delay",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Delay 1s",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1280,
+        "y": 400,
+        "wires": [
+            [
+                "e7fe366260900258"
+            ]
+        ]
+    },
+    {
+        "id": "133e3fb497191699",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Check containers",
+        "func": "let containers = msg.payload;\n\nlet isRunning = Object.entries(containers).some(([name, c]) =>name.startsWith(msg.containername) \n &&(c.state === \"running\" || c.state === \"restarting\"));\n\nif (!isRunning) \n{\n  return [msg, null];\n} else \n{\n  return [null, msg];\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1850,
+        "y": 400,
+        "wires": [
+            [
+                "8d3445e0fab88cef"
+            ],
+            [
+                "c659047dce34a9a3"
+            ]
+        ]
+    },
+    {
+        "id": "bac162de33702f2c",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Read containers",
+        "func": "return {\n  \"containername\": msg.containername,\n  \"msgNumber\": msg.msgNumber,\n  \"globalconfig\": msg.globalconfig,\n  method: \"GET\",\n  url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers\",\n  headers: {\n    Authorization: msg.globalconfig.httpAuth,\n    \"Content-Type\": \"application/json\"\n  }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1480,
+        "y": 460,
+        "wires": [
+            [
+                "5a19f6470f9aa8ec"
+            ]
+        ]
+    },
+    {
+        "id": "5a19f6470f9aa8ec",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1670,
+        "y": 460,
+        "wires": [
+            [
+                "98c1756a204c6098"
+            ]
+        ]
+    },
+    {
+        "id": "52b115fa3116d044",
+        "type": "delay",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Delay 1s",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1320,
+        "y": 460,
+        "wires": [
+            [
+                "bac162de33702f2c"
+            ]
+        ]
+    },
+    {
+        "id": "98c1756a204c6098",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Check containers",
+        "func": "let containers = msg.payload;\nlet found = Object.values(containers).find(c => c.containername && c.containername.startsWith(msg.containername));\nif (!found) \n{\n  return [msg, null];\n}\nelse \n{\n  return [null, msg];\n}\n\n\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1850,
+        "y": 460,
+        "wires": [
+            [
+                "bedca2a10beb0385"
+            ],
+            [
+                "52b115fa3116d044"
+            ]
+        ]
+    },
+    {
+        "id": "bedca2a10beb0385",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Read volumes",
+        "func": "\nreturn {\n    \"globalconfig\": msg.globalconfig,\n    method: \"GET\",\n    url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/volumes\",\n    headers: {\n        Authorization: msg.globalconfig.httpAuth,\n        \"Content-Type\": \"application/json\"\n    }\n};\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 520,
+        "wires": [
+            [
+                "84307e0f8edeb6ce"
+            ]
+        ]
+    },
+    {
+        "id": "84307e0f8edeb6ce",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1110,
+        "y": 520,
+        "wires": [
+            [
+                "3332028b7d347afb"
+            ]
+        ]
+    },
+    {
+        "id": "07bf1be354c70987",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP DELETE",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1140,
+        "y": 580,
+        "wires": [
+            [
+                "f801e8b68eb7ee78"
+            ]
+        ]
+    },
+    {
+        "id": "3332028b7d347afb",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Delete volumes",
+        "func": "msg.method = \"DELETE\";\nlet volumes = Object.values(msg.payload);\nlet index = 0;\nvolumes.keys();\nfor (let i = 0; i < volumes.length; i++) \n{\n  let volume = volumes[i];\n  let tosend = {\n    globalconfig: msg.globalconfig,\n    msgNumber: index,\n    containername: volume.key,\n    method: \"DELETE\",\n    url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/volumes/\" + volume.key,\n\n    headers: {\n      Authorization: msg.globalconfig.httpAuth,\n      \"Content-Type\": \"application/json\"\n    },\n\n    payload: {\n      \"volumeName\": volume.key\n    }\n  };\n  node.send(tosend);\n  index++;\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 580,
+        "wires": [
+            [
+                "07bf1be354c70987"
+            ]
+        ]
+    },
+    {
+        "id": "f801e8b68eb7ee78",
+        "type": "delay",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Delay 1s",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1300,
+        "y": 580,
+        "wires": [
+            [
+                "69f0cffa389f89fb"
+            ]
+        ]
+    },
+    {
+        "id": "69f0cffa389f89fb",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Read volumes",
+        "func": "return {\n  \"containername\": msg.containername,\n  \"msgNumber\": msg.msgNumber,\n  \"globalconfig\": msg.globalconfig,\n  method: \"GET\",\n  url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers\",\n  headers: {\n    Authorization: msg.globalconfig.httpAuth,\n    \"Content-Type\": \"application/json\"\n  }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1460,
+        "y": 580,
+        "wires": [
+            [
+                "305399dd2b638369"
+            ]
+        ]
+    },
+    {
+        "id": "305399dd2b638369",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1650,
+        "y": 580,
+        "wires": [
+            [
+                "b023b47856efbfae"
+            ]
+        ]
+    },
+    {
+        "id": "b023b47856efbfae",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "Check volumes",
+        "func": "let volumes = msg.payload;\nvolumes.keys();\nif (volumes.length === 0) \n{\n  return [msg, null];\n}\nelse \n{\n  return [null, msg];\n}\n\n\n\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1820,
+        "y": 580,
+        "wires": [
+            [
+                "dc68782c5594b482"
+            ],
+            [
+                "f801e8b68eb7ee78"
+            ]
+        ]
+    },
+    {
+        "id": "dc68782c5594b482",
+        "type": "debug",
+        "z": "ca05722bab3f9dfc",
+        "g": "ad953a59137e678a",
+        "name": "END DELETE",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2040,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "f1358d5304c82f32",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "PULL Img",
+        "func": "node.warn(msg.globalconfig.ip);\nlet tosend = \n{\n  \"globalconfig\": msg.globalconfig,\n  \"msgNumber\": 0,\n  \"total\": msg.containerList.length,\n  \"method\": \"POST\",\n  \"url\": \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/images/pull-image\",\n\n  \"headers\": \n  {\n    Authorization: msg.globalconfig.httpAuth,\n    ContentType: \"application/json\"\n  },\n  \"payload\": {}\n}\n\nfor (let i = 0; i < msg.containerList.length; i++) \n{\n\n  tosend.msgNumber = i;\n  tosend.containerConfig = msg.containerList[i];\n  tosend.payload.image = msg.containerList[i].image;\n  node.send(tosend);\n  node.warn(`pulling ${msg.containerList[i].image}`);\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 100,
+        "wires": [
+            [
+                "51ac831eaa9d8ccb"
+            ]
+        ]
+    },
+    {
+        "id": "51ac831eaa9d8ccb",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "HTTP POST",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1030,
+        "y": 100,
+        "wires": [
+            [
+                "ccf8c089e2e59525"
+            ]
+        ]
+    },
+    {
+        "id": "049352f0deec3d2a",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Read Imgs",
+        "func": "return {\n    \"msgNumber\": msg.msgNumber,\n    \"total\": msg.total,\n    \"containerConfig\": msg.containerConfig,\n    \"globalconfig\": msg.globalconfig,\n    \"method\": \"GET\",\n    \"url\": \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/images\",\n    \n    \"headers\": \n    {\n        Authorization: msg.globalconfig.httpAuth,\n        ContentType: \"application/json\"\n    },\n    \"payload\": {},\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1330,
+        "y": 100,
+        "wires": [
+            [
+                "904142670b98c8fc"
+            ]
+        ]
+    },
+    {
+        "id": "904142670b98c8fc",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1490,
+        "y": 100,
+        "wires": [
+            [
+                "cafb0b9b4458aa34"
+            ]
+        ]
+    },
+    {
+        "id": "cafb0b9b4458aa34",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Check Img",
+        "func": "let imgsPulled = msg.payload;\nlet found = Object.keys(imgsPulled).some(imgsPulled => imgsPulled.startsWith(msg.containerConfig.image));\nmsg.queueToken = 0;\nif (found) \n{  \n    return [msg, null];\n} \nelse \n{\n    return [null, msg];\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1670,
+        "y": 100,
+        "wires": [
+            [
+                "4f62dde5e8a112d2"
+            ],
+            [
+                "ccf8c089e2e59525"
+            ]
+        ]
+    },
+    {
+        "id": "63a4c026a56fe091",
+        "type": "delay",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Delay 1s",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1240,
+        "y": 160,
+        "wires": [
+            [
+                "f892b63dac413ecd"
+            ]
+        ]
+    },
+    {
+        "id": "47b4edfe0282811b",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Create Ctnr",
+        "func": "msg.method = \"POST\";\nmsg.url = \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers/create-container\";\n\nmsg.headers = {\n  Authorization: msg.globalconfig.httpAuth,\n  \"Content-Type\": \"application/json\"\n};\n\nmsg.payload = {\n  \"name\": msg.containerConfig.name,\n  \"options\": msg.containerConfig.config,\n};\nmsg.payload.options.image = msg.containerConfig.image;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 160,
+        "wires": [
+            [
+                "3e372f80aa529cd5"
+            ]
+        ]
+    },
+    {
+        "id": "f892b63dac413ecd",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Read Ctnrs",
+        "func": "\nreturn {\n    \"globalconfig\": msg.globalconfig,\n    \"msgNumber\": msg.msgNumber,\n    \"total\": msg.total,\n    \"containerConfig\": msg.containerConfig,\n    method: \"GET\",\n    url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers\",\n    headers: {\n        Authorization: msg.globalconfig.httpAuth,\n        \"Content-Type\": \"application/json\"\n    }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1390,
+        "y": 160,
+        "wires": [
+            [
+                "fe50729a09ac5df1"
+            ]
+        ]
+    },
+    {
+        "id": "fe50729a09ac5df1",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1550,
+        "y": 160,
+        "wires": [
+            [
+                "a3edb67650e8d1fa"
+            ]
+        ]
+    },
+    {
+        "id": "ccf8c089e2e59525",
+        "type": "delay",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Delay 1s",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1180,
+        "y": 100,
+        "wires": [
+            [
+                "049352f0deec3d2a"
+            ]
+        ]
+    },
+    {
+        "id": "a3edb67650e8d1fa",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "check Ctnr",
+        "func": "let containersCreated = msg.payload;\n\nlet found = Object.values(containersCreated).some(c =>\n    c.image && c.image.startsWith(msg.containerConfig.image)\n);\n\nif (found) \n{\n    return [msg, null];\n} else \n{\n    return [null, msg];\n}",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1710,
+        "y": 160,
+        "wires": [
+            [
+                "ddce8468e2891562"
+            ],
+            [
+                "63a4c026a56fe091"
+            ]
+        ]
+    },
+    {
+        "id": "ddce8468e2891562",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Start Cntr",
+        "func": "msg.method = \"POST\";\nmsg.url = \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers/start\";\n\nmsg.headers = {\n    Authorization: msg.globalconfig.httpAuth,\n    \"Content-Type\": \"application/json\"\n};\n\nmsg.payload = {\n    \"container-name\": msg.containerConfig.name,  \n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 960,
+        "y": 220,
+        "wires": [
+            [
+                "2043961b8d24834b"
+            ]
+        ]
+    },
+    {
+        "id": "2043961b8d24834b",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "HTTP POST",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1110,
+        "y": 220,
+        "wires": [
+            [
+                "c739dfafa9984780"
+            ]
+        ]
+    },
+    {
+        "id": "82f50747e0e1c90c",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Read state cntr",
+        "func": "return {\n    \"containerConfig\": msg.containerConfig,\n    \"globalconfig\": msg.globalconfig,\n    method: \"GET\",\n    url: \"https://\" + msg.globalconfig.ip + \"/api/rest/v2/services/containerization/containers\",\n    headers: {\n        Authorization: msg.globalconfig.httpAuth,\n        \"Content-Type\": \"application/json\"\n    }\n};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1420,
+        "y": 220,
+        "wires": [
+            [
+                "694c14799e13c890"
+            ]
+        ]
+    },
+    {
+        "id": "694c14799e13c890",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "HTTP GET",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1590,
+        "y": 220,
+        "wires": [
+            [
+                "868c0e8223925c7d"
+            ]
+        ]
+    },
+    {
+        "id": "868c0e8223925c7d",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Check state Cntr",
+        "func": "let container = msg.containerConfig.name;\n\nif (msg.payload[msg.containerConfig.name].state === \"running\") {\n    node.warn(\"Container\" + msg.containerConfig.name + \"Running\");\n    return [msg, null, { \"queueToken\": 1 }];\n} else {\n    node.warn(msg.containerConfig.name + \"not running\");\n    return [null, msg, null];\n}",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1790,
+        "y": 220,
+        "wires": [
+            [
+                "9b7414183d8350a1"
+            ],
+            [
+                "c739dfafa9984780"
+            ],
+            [
+                "4f62dde5e8a112d2"
+            ]
+        ]
+    },
+    {
+        "id": "3e372f80aa529cd5",
+        "type": "http request",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "HTTP POST",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "2418490b3512393e",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1090,
+        "y": 160,
+        "wires": [
+            [
+                "63a4c026a56fe091"
+            ]
+        ]
+    },
+    {
+        "id": "c739dfafa9984780",
+        "type": "delay",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "Delay 1s",
+        "pauseType": "delay",
+        "timeout": "1",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1260,
+        "y": 220,
+        "wires": [
+            [
+                "82f50747e0e1c90c"
+            ]
+        ]
+    },
+    {
+        "id": "9b7414183d8350a1",
+        "type": "debug",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "END CREATE",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2020,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "4f62dde5e8a112d2",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "9ff47e4845576194",
+        "name": "queue manager",
+        "func": "let queue = flow.get('queue');\nlet queueToken = flow.get('queueToken');\nlet queueCount = flow.get('queueCount');\n\n\nif (msg.queueToken) \n{\n    flow.set('queueToken', 1); \n}\nelse\n{\n    queue.push(msg);\n    flow.set('queue', queue);\n}\n\nif (flow.get('queueToken'))\n{\n    let index = queue.findIndex(m => m.msgNumber === queueCount);\n    if (index !== -1) \n    {\n        let outMsg = queue.splice(index, 1)[0];\n        flow.set('queue', queue);\n        flow.set('queueCount', queueCount + 1);\n        flow.set('queueToken',0);\n        return outMsg;\n    }\n    else \n    {\n        return null;\n    }\n}\nelse\n{\n    return null;\n}\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "flow.set('queueToken', 1);\nflow.set('queueCount', 0);\nflow.set('queue',[]);",
+        "finalize": "",
+        "libs": [],
+        "x": 1900,
+        "y": 100,
+        "wires": [
+            [
+                "47b4edfe0282811b"
+            ]
+        ]
+    },
+    {
+        "id": "704038266f6d1d35",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "TO CONFIGURE TTS",
+        "func": "/*--------- GLOBAL CONFIGURATION ---------*/\n\nconst globalconfig =\n{\n    //flowmode = 0 : delete containers and images\n    //flowmode = 1 : create and start listed containers\n    flowmode: 1,\n    ip: \"192.168.1.109\",\n    httpAuth: \"Basic YWRtaW46dW5pdi1sb3Jhd2Fu\",\n    login: \"admin\",\n    password: \"univ-lorawan\",\n    network: \"chirpstack-net\"\n}\n\n/*--------- CONTAINERS CONFIGURATION ---------*/\nconst redisConfig = \n{\n    \"Cmd\": [\"redis-server\", \"--save\", \"300\", \"1\", \"--save\", \"60\", \"100\", \"--appendonly\", \"yes\"],\n    \"HostConfig\": {\n        \"Binds\": [\"redis-volume:/data\"],\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" }\n    }\n}\n\nconst postgresConfig =\n{\n    \"Env\": [\n        \"POSTGRES_PASSWORD=root\",\n        \"POSTGRES_USER=root\",\n        \"POSTGRES_DB=ttn_lorawan\"\n    ],\n    \"HostConfig\": {\n        \"Binds\": [\"postgres-volume:/var/lib/postgresql/data\"],\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" }\n    }\n}\n\nconst TTS_DOMAIN = \"TTS_DOMAIN=\" + globalconfig.ip;\nconst thethingsstackConfig =\n{\n    \"Env\": [\n        TTS_DOMAIN,\n        \"TTS_PORT=50085\",\n        \"TTN_LW_BLOB_LOCAL_DIRECTORY=/srv/ttn-lorawan/public/blob\",\n        \"TTN_LW_REDIS_ADDRESS=redis:6379\",\n        \"TTN_LW_IS_DATABASE_URI=postgres://root:root@postgres:5432/ttn_lorawan?sslmode=disable\",\n        \"CLI_AUTO_LOGIN=true\"\n    ],\n    \"HostConfig\": {\n        \"Binds\": [\n            \"stack-blob:/srv/ttn-lorawan/public/blob\",\n            \"stack-data:/srv/data\"\n        ],\n        \"PortBindings\": {\n            \"8885/tcp\": [{ \"HostPort\": \"50085\" }],\n            \"8884/tcp\": [{ \"HostPort\": \"50084\" }],\n            \"8887/tcp\": [{ \"HostPort\": \"50087\" }],\n            \"1700/udp\": [{ \"HostPort\": \"50017\" }]\n        },\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" },\n        \"Links\": [\"postgres:postgres-tts-link\", \"redis:redis-tts-link\"]\n    }\n}\n\nconst nodereConfig =\n{\n    \"Image\": \"montagny/node-red:latest\",\n    \"HostConfig\": {\n        \"Binds\": [\"nodereddata-volume:/data\"],\n        \"PortBindings\": { \"1880/tcp\": [{ \"HostPort\": \"50080\" }] },\n        \"RestartPolicy\": { \"Name\": \"unless-stopped\" },\n        \"Links\": [\"thethingsstack:nodered-tts-link\"]\n    }\n}\n\n/*------------- CONTAINERS -------------*/\n\nconst containerList = [\n    //Containers will be created in order, starting from containerList[0] until containerList[n]\n    { image: \"redis:7.4.2-alpine3.21\", config: redisConfig, name: \"redis\" },\n    { image: \"postgres:16.8-alpine3.20\", config: postgresConfig, name: \"postgres\" },\n    { image: \"xoseperez/the-things-stack:v1.3.0\", config: thethingsstackConfig, name: \"thethingsstack\" },\n    { image: \"montagny/node-red:1.2\", config: nodereConfig, name: \"nodered\" }\n];\n\nmsg.containerList = containerList;\nmsg.globalconfig = globalconfig;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 220,
+        "wires": [
+            [
+                "351df29e713ae824"
+            ]
+        ]
+    },
+    {
+        "id": "1634cc60f1379fe2",
+        "type": "inject",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "START TTS",
+        "props": [
+            {
+                "p": "flowstate",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "x": 130,
+        "y": 220,
+        "wires": [
+            [
+                "704038266f6d1d35"
+            ]
+        ]
+    },
+    {
+        "id": "68de43a35b4b3613",
+        "type": "inject",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "START  DELETE",
+        "props": [
+            {
+                "p": "flowstate",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "x": 140,
+        "y": 260,
+        "wires": [
+            [
+                "fe7d32a45009afca"
+            ]
+        ]
+    },
+    {
+        "id": "fe7d32a45009afca",
+        "type": "function",
+        "z": "ca05722bab3f9dfc",
+        "g": "f4445051912658d1",
+        "name": "DELETE ALL",
+        "func": "/*--------- GLOBAL CONFIGURATION ---------*/\n\nconst globalconfig =\n{\n    flowmode: 0,\n    ip: \"192.168.1.109\",\n    httpAuth: \"Basic YWRtaW46dW5pdi1sb3Jhd2Fu\",\n    login: \"admin\",\n    password: \"univ-lorawan\",\n    network: \"chirpstack-net\"\n}\nmsg.globalconfig = globalconfig;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 260,
+        "wires": [
+            [
+                "351df29e713ae824"
+            ]
+        ]
+    },
+    {
+        "id": "127b937ec793ac30",
+        "type": "debug",
+        "z": "ca05722bab3f9dfc",
+        "name": "ERROR",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "2418490b3512393e",
+        "type": "tls-config",
+        "name": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    }
+]
