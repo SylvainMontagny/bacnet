@@ -12,7 +12,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_scheduleRead",
-        "func": "let client = global.get('bacnetClient');\n\nif (!client) {\n    client = new bacnet.default({ apduTimeout: 10000 });\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n    global.set('bacnetClient', client);\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '10.90.0.14:47808' };\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE\n        );\n\n        const weekly = (value.values[0]?.value) || [];\n        \n        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];\n        \n        const result = {};\n        weekly.forEach((day, index) => {\n            result[days[index]] = day;\n        });\n\n        node.warn(JSON.stringify(result, null, 2));\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
+        "func": "let client =  new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nif (!client) {\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE\n        );\n\n        const weekly = (value.values[0]?.value) || [];\n        \n        const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];\n        \n        const result = {};\n        weekly.forEach((day, index) => {\n            result[days[index]] = day;\n        });\n\n        node.warn(JSON.stringify(result, null, 2));\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -24,8 +24,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 500,
-        "y": 200,
+        "x": 420,
+        "y": 280,
         "wires": [
             [
                 "688d30db47432c9f"
@@ -53,8 +53,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 200,
+        "x": 130,
+        "y": 280,
         "wires": [
             [
                 "1fa7db01dd439534"
@@ -73,8 +73,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 200,
+        "x": 680,
+        "y": 280,
         "wires": []
     },
     {
@@ -82,7 +82,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_TrendLogRead",
-        "func": "let client = global.get('bacnetClient');\n\nif (!client) {\n    client = new bacnet.default({ apduTimeout: 10000 });\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n    global.set('bacnetClient', client);\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '10.90.0.14:47808' };\n\nfunction decodeTrendLog(buffer) {\n    const records = [];\n    const buf = Array.from(buffer);\n    let i = 0;\n    while (i + 21 < buf.length) {\n        if (buf[i] !== 14 || buf[i+1] !== 164) { i++; continue; }\n        if (buf[i+20] !== 4 || buf[i+21] !== 0) { i++; continue; }\n        const year   = 1900 + buf[i+2];\n        const month  = buf[i+3];\n        const day    = buf[i+4];\n        const hour   = buf[i+7];\n        const minute = buf[i+8];\n        const second = buf[i+9];\n        const timestamp = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')} ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:${String(second).padStart(2,'0')}`;\n        const valBuffer = Buffer.from(buf.slice(i+14, i+18));\n        const value = parseFloat(valBuffer.readFloatBE(0).toFixed(4));\n        records.push({ timestamp, value });\n        i += 22;\n    }\n    return records;\n}\n\nasync function main() {\n    try {\n        const dateFrom = new Date('2026-03-03T10:00:00');\n        const chunkSize = 20;\n\n        const recordCountResult = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n            bacnet.PropertyIdentifier.RECORD_COUNT\n        );\n        const totalCount = recordCountResult.values?.[0]?.value;\n        node.warn(`RECORD_COUNT: ${totalCount}`);\n\n        let allRecords = [];\n        let currentIndex = totalCount;\n        let done = false;\n        let chunk = 0;\n\n        while (currentIndex > 0 && !done) {\n            chunk++;\n            const startIndex = Math.max(1, currentIndex - chunkSize + 1);\n            const count = currentIndex - startIndex + 1;\n\n            node.warn(`Chunk ${chunk}: readRange [${startIndex} → ${currentIndex}] (${count} entrées)`);\n\n            const response = await client.readRange(\n                address,\n                { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                startIndex, count,\n                { maxSegments: bacnet.MaxSegmentsAccepted.SEGMENTS_65 }\n            );\n\n            const records = decodeTrendLog(response.rangeBuffer);\n            node.warn(`Chunk ${chunk}: décodé ${records.length} entrées | ${records[0]?.timestamp} → ${records[records.length-1]?.timestamp}`);\n\n            const filtered = records.filter(r => new Date(r.timestamp) >= dateFrom);\n            node.warn(`Chunk ${chunk}: ${filtered.length} entrées >= dateFrom`);\n            allRecords = filtered.concat(allRecords);\n\n            if (filtered.length < records.length) {\n                node.warn(`Chunk ${chunk}: dateFrom atteinte, arrêt`);\n                done = true;\n            }\n\n            currentIndex = startIndex - 1;\n        }\n\n        node.warn(`RÉSULTAT: ${allRecords.length} enregistrements`);\n        node.send({ payload: allRecords });\n\n    } catch (err) {\n        node.error('Erreur: ' + err.message);\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
+        "func": "let client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nif (!client) \n{\n    client.on('error', (err) => node.error('Erreur client: ' + err.message));\n}\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nfunction decodeTrendLog(buffer) {\n    const records = [];\n    const buf = Array.from(buffer);\n    let i = 0;\n    while (i + 21 < buf.length) {\n        if (buf[i] !== 14 || buf[i+1] !== 164) { i++; continue; }\n        if (buf[i+20] !== 4 || buf[i+21] !== 0) { i++; continue; }\n        const year   = 1900 + buf[i+2];\n        const month  = buf[i+3];\n        const day    = buf[i+4];\n        const hour   = buf[i+7];\n        const minute = buf[i+8];\n        const second = buf[i+9];\n        const timestamp = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')} ${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}:${String(second).padStart(2,'0')}`;\n        const valBuffer = Buffer.from(buf.slice(i+14, i+18));\n        const value = parseFloat(valBuffer.readFloatBE(0).toFixed(4));\n        records.push({ timestamp, value });\n        i += 22;\n    }\n    return records;\n}\n\nasync function main() {\n    try {\n        const dateFrom = new Date('2026-03-03T10:00:00');\n        const chunkSize = 20;\n\n        const recordCountResult = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n            bacnet.PropertyIdentifier.RECORD_COUNT\n        );\n        const totalCount = recordCountResult.values?.[0]?.value;\n        node.warn(`RECORD_COUNT: ${totalCount}`);\n\n        let allRecords = [];\n        let currentIndex = totalCount;\n        let done = false;\n        let chunk = 0;\n\n        while (currentIndex > 0 && !done) {\n            chunk++;\n            const startIndex = Math.max(1, currentIndex - chunkSize + 1);\n            const count = currentIndex - startIndex + 1;\n\n            node.warn(`Chunk ${chunk}: readRange [${startIndex} → ${currentIndex}] (${count} entrées)`);\n\n            const response = await client.readRange(\n                address,\n                { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                startIndex, count,\n                { maxSegments: bacnet.MaxSegmentsAccepted.SEGMENTS_65 }\n            );\n\n            const records = decodeTrendLog(response.rangeBuffer);\n            node.warn(`Chunk ${chunk}: décodé ${records.length} entrées | ${records[0]?.timestamp} → ${records[records.length-1]?.timestamp}`);\n\n            const filtered = records.filter(r => new Date(r.timestamp) >= dateFrom);\n            node.warn(`Chunk ${chunk}: ${filtered.length} entrées >= dateFrom`);\n            allRecords = filtered.concat(allRecords);\n\n            if (filtered.length < records.length) {\n                node.warn(`Chunk ${chunk}: dateFrom atteinte, arrêt`);\n                done = true;\n            }\n\n            currentIndex = startIndex - 1;\n        }\n\n        node.warn(`RÉSULTAT: ${allRecords.length} enregistrements`);\n        node.send({ payload: allRecords });\n\n    } catch (err) {\n        node.error('Erreur: ' + err.message);\n    } finally {\n\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -94,8 +94,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 500,
-        "y": 460,
+        "x": 420,
+        "y": 540,
         "wires": [
             [
                 "0c8e778bc06752cf"
@@ -123,8 +123,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 460,
+        "x": 130,
+        "y": 540,
         "wires": [
             [
                 "a3301fcfd6d4dc76"
@@ -143,8 +143,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 460,
+        "x": 680,
+        "y": 540,
         "wires": []
     },
     {
@@ -152,7 +152,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_TrendLogRead",
-        "func": "const client = new bacnet.default({ apduTimeout: 10000 });\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '10.90.0.14:47808' };\nconst deviceId = 'SDEY_productionPV';\n\nconst MAX_RETRIES = 3;\nconst RETRY_DELAY_MS = 2000;\n\nasync function withRetry(label, fn) {\n    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {\n        try {\n            return await fn();\n        } catch (err) {\n            node.warn(`[RETRY] ${label} — tentative ${attempt}/${MAX_RETRIES} échouée: ${err.message}`);\n            if (attempt === MAX_RETRIES) throw err;\n            await new Promise(res => setTimeout(res, RETRY_DELAY_MS * attempt));\n        }\n    }\n}\n\nfunction decodeTrendLog(buffer) {\n    const records = [];\n    const buf = Array.from(buffer);\n    let i = 0;\n    while (i + 21 < buf.length) {\n        if (buf[i] !== 14 || buf[i + 1] !== 164) { i++; continue; }\n        if (buf[i + 20] !== 4 || buf[i + 21] !== 0) { i++; continue; }\n        const year = 1900 + buf[i + 2];\n        const month = buf[i + 3];\n        const day = buf[i + 4];\n        const hour = buf[i + 7];\n        const minute = buf[i + 8];\n        const second = buf[i + 9];\n        const timestamp = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;\n        const valBuffer = Buffer.from(buf.slice(i + 14, i + 18));\n        const value = parseFloat(valBuffer.readFloatBE(0).toFixed(4));\n        records.push({ timestamp, value });\n        i += 22;\n    }\n    return records;\n}\n\nasync function main() {\n    try {\n        const dateFrom = new Date('2026-03-05T10:00:00');\n        const chunkSize = 20;\n\n        const recordCountResult = await withRetry('readProperty RECORD_COUNT', () =>\n            client.readProperty(\n                address,\n                { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                bacnet.PropertyIdentifier.RECORD_COUNT\n            )\n        );\n        const totalCount = recordCountResult.values?.[0]?.value;\n        node.warn(`RECORD_COUNT: ${totalCount}`);\n\n        let allRecords = [];\n        let currentIndex = totalCount;\n        let done = false;\n        let chunk = 0;\n\n        node.status({ fill: 'blue', shape: 'ring', text: 'Lecture en cours...' });\n\n        while (currentIndex > 0 && !done) {\n            chunk++;\n            const startIndex = Math.max(1, currentIndex - chunkSize + 1);\n            const count = currentIndex - startIndex + 1;\n\n            node.warn(`Chunk ${chunk}: readRange [${startIndex} → ${currentIndex}] (${count} entrées)`);\n\n            const response = await withRetry(`readRange chunk ${chunk} [${startIndex}→${currentIndex}]`, () =>\n                client.readRange(\n                    address,\n                    { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                    startIndex, count,\n                    { maxSegments: bacnet.MaxSegmentsAccepted.SEGMENTS_65 }\n                )\n            );\n\n            const records = decodeTrendLog(response.rangeBuffer);\n            node.warn(`Chunk ${chunk}: décodé ${records.length} entrées | ${records[0]?.timestamp} → ${records[records.length - 1]?.timestamp}`);\n\n            const filtered = records.filter(r => new Date(r.timestamp) >= dateFrom);\n            node.warn(`Chunk ${chunk}: ${filtered.length} entrées >= dateFrom`);\n            allRecords = filtered.concat(allRecords);\n\n            if (filtered.length < records.length) {\n                node.warn(`Chunk ${chunk}: dateFrom atteinte, arrêt`);\n                done = true;\n            }\n\n            currentIndex = startIndex - 1;\n        }\n\n        node.warn(`RÉSULTAT: ${allRecords.length} enregistrements`);\n\n        if (allRecords.length > 0) {\n            const values = allRecords.map(r =>\n                `('${r.timestamp}', '${deviceId}', ${r.value})`\n            ).join(', ');\n\n            node.send({\n                query: `INSERT INTO data(time, id, value) VALUES ${values} ON CONFLICT DO NOTHING;`,\n                debug: {\n                    recordCount: allRecords.length,\n                    firstRecord: allRecords[0],\n                    lastRecord: allRecords[allRecords.length - 1]\n                }\n            });\n\n            node.status({ fill: 'green', shape: 'dot', text: `${allRecords.length} records insérés` });\n        } else {\n            node.status({ fill: 'yellow', shape: 'dot', text: 'Aucun enregistrement trouvé' });\n        }\n\n    } catch (err) {\n        node.error('Erreur: ' + err.message);\n        node.status({ fill: 'red', shape: 'dot', text: 'Erreur: ' + err.message });\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
+        "func": "const client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: flow.get('ip') + \":\" + flow.get('port') };\nconst deviceId = 'SDEY_productionPV';\n\nconst MAX_RETRIES = 3;\nconst RETRY_DELAY_MS = 2000;\n\nasync function withRetry(label, fn) {\n    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {\n        try {\n            return await fn();\n        } catch (err) {\n            node.warn(`[RETRY] ${label} — tentative ${attempt}/${MAX_RETRIES} échouée: ${err.message}`);\n            if (attempt === MAX_RETRIES) throw err;\n            await new Promise(res => setTimeout(res, RETRY_DELAY_MS * attempt));\n        }\n    }\n}\n\nfunction decodeTrendLog(buffer) {\n    const records = [];\n    const buf = Array.from(buffer);\n    let i = 0;\n    while (i + 21 < buf.length) {\n        if (buf[i] !== 14 || buf[i + 1] !== 164) { i++; continue; }\n        if (buf[i + 20] !== 4 || buf[i + 21] !== 0) { i++; continue; }\n        const year = 1900 + buf[i + 2];\n        const month = buf[i + 3];\n        const day = buf[i + 4];\n        const hour = buf[i + 7];\n        const minute = buf[i + 8];\n        const second = buf[i + 9];\n        const timestamp = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;\n        const valBuffer = Buffer.from(buf.slice(i + 14, i + 18));\n        const value = parseFloat(valBuffer.readFloatBE(0).toFixed(4));\n        records.push({ timestamp, value });\n        i += 22;\n    }\n    return records;\n}\n\nasync function main() {\n    try {\n        const dateFrom = new Date('2026-03-05T10:00:00');\n        const chunkSize = 20;\n\n        const recordCountResult = await withRetry('readProperty RECORD_COUNT', () =>\n            client.readProperty(\n                address,\n                { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                bacnet.PropertyIdentifier.RECORD_COUNT\n            )\n        );\n        const totalCount = recordCountResult.values?.[0]?.value;\n        node.warn(`RECORD_COUNT: ${totalCount}`);\n\n        let allRecords = [];\n        let currentIndex = totalCount;\n        let done = false;\n        let chunk = 0;\n\n        node.status({ fill: 'blue', shape: 'ring', text: 'Lecture en cours...' });\n\n        while (currentIndex > 0 && !done) {\n            chunk++;\n            const startIndex = Math.max(1, currentIndex - chunkSize + 1);\n            const count = currentIndex - startIndex + 1;\n\n            node.warn(`Chunk ${chunk}: readRange [${startIndex} → ${currentIndex}] (${count} entrées)`);\n\n            const response = await withRetry(`readRange chunk ${chunk} [${startIndex}→${currentIndex}]`, () =>\n                client.readRange(\n                    address,\n                    { type: bacnet.ObjectType.TREND_LOG, instance: 300001 },\n                    startIndex, count,\n                    { maxSegments: bacnet.MaxSegmentsAccepted.SEGMENTS_65 }\n                )\n            );\n\n            const records = decodeTrendLog(response.rangeBuffer);\n            node.warn(`Chunk ${chunk}: décodé ${records.length} entrées | ${records[0]?.timestamp} → ${records[records.length - 1]?.timestamp}`);\n\n            const filtered = records.filter(r => new Date(r.timestamp) >= dateFrom);\n            node.warn(`Chunk ${chunk}: ${filtered.length} entrées >= dateFrom`);\n            allRecords = filtered.concat(allRecords);\n\n            if (filtered.length < records.length) {\n                node.warn(`Chunk ${chunk}: dateFrom atteinte, arrêt`);\n                done = true;\n            }\n\n            currentIndex = startIndex - 1;\n        }\n\n        node.warn(`RÉSULTAT: ${allRecords.length} enregistrements`);\n\n        if (allRecords.length > 0) {\n            const values = allRecords.map(r =>\n                `('${r.timestamp}', '${deviceId}', ${r.value})`\n            ).join(', ');\n\n            node.send({\n                query: `INSERT INTO data(time, id, value) VALUES ${values} ON CONFLICT DO NOTHING;`,\n                debug: {\n                    recordCount: allRecords.length,\n                    firstRecord: allRecords[0],\n                    lastRecord: allRecords[allRecords.length - 1]\n                }\n            });\n\n            node.status({ fill: 'green', shape: 'dot', text: `${allRecords.length} records insérés` });\n        } else {\n            node.status({ fill: 'yellow', shape: 'dot', text: 'Aucun enregistrement trouvé' });\n        }\n\n    } catch (err) {\n        node.error('Erreur: ' + err.message);\n        node.status({ fill: 'red', shape: 'dot', text: 'Erreur: ' + err.message });\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -164,8 +164,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 500,
-        "y": 500,
+        "x": 420,
+        "y": 580,
         "wires": [
             [
                 "93db22e1fad02683"
@@ -193,8 +193,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 500,
+        "x": 130,
+        "y": 580,
         "wires": [
             [
                 "8803f82918808746"
@@ -213,8 +213,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 500,
+        "x": 680,
+        "y": 580,
         "wires": []
     },
     {
@@ -222,7 +222,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_ExceptionRead",
-        "func": "const client = new bacnet.default({ apduTimeout: 4000 });\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '192.168.1.109:47808' };\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 5001 },\n            bacnet.PropertyIdentifier.EXCEPTION_SCHEDULE\n        );\n\n        node.warn('RAW VALUE: ' + JSON.stringify(value, null, 2));\n\n        const exceptions = (value.values[0]?.value) || [];\n\n        const result = exceptions.map((specialEvent, index) => {\n            // Inspecter chaque événement brut\n\n            // La structure peut être à un niveau différent selon le device/lib\n            const raw = specialEvent?.value ?? specialEvent;\n            const period = raw?.period ?? raw?.calendarEntry ?? raw;\n            const timeValues = (raw?.listOfTimeValues || raw?.timeValues || []).map(tv => ({\n                time: tv?.time,\n                value: tv?.value\n            }));\n            node.warn(raw);\n            return {\n                index,\n                raw,\n                period,\n                timeValues,\n                priority: raw?.eventPriority ?? raw?.priority\n            };\n\n        });\n\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
+        "func": "const client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 5001 },\n            bacnet.PropertyIdentifier.EXCEPTION_SCHEDULE\n        );\n\n        node.warn('RAW VALUE: ' + JSON.stringify(value, null, 2));\n\n        const exceptions = (value.values[0]?.value) || [];\n\n        const result = exceptions.map((specialEvent, index) => {\n            // Inspecter chaque événement brut\n\n            // La structure peut être à un niveau différent selon le device/lib\n            const raw = specialEvent?.value ?? specialEvent;\n            const period = raw?.period ?? raw?.calendarEntry ?? raw;\n            const timeValues = (raw?.listOfTimeValues || raw?.timeValues || []).map(tv => ({\n                time: tv?.time,\n                value: tv?.value\n            }));\n            node.warn(raw);\n            return {\n                index,\n                raw,\n                period,\n                timeValues,\n                priority: raw?.eventPriority ?? raw?.priority\n            };\n\n        });\n\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -234,8 +234,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 510,
-        "y": 320,
+        "x": 430,
+        "y": 400,
         "wires": [
             [
                 "b15c52a89b7ada9b"
@@ -263,8 +263,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 320,
+        "x": 130,
+        "y": 400,
         "wires": [
             [
                 "08f98d33ddc9031e"
@@ -283,8 +283,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 320,
+        "x": 680,
+        "y": 400,
         "wires": []
     },
     {
@@ -292,7 +292,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_scheduleWrite",
-        "func": "const client = new bacnet.default({ apduTimeout: 4000 });\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '10.90.0.14:47808' };\n\n// Helper pour créer un objet Date avec l'heure souhaitée\nfunction makeTime(hour, minute) {\n    const d = new Date();\n    d.setHours(hour, minute, 0, 0);\n    return d;\n}\n\nconst weeklySchedule = [\n    // Lundi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Mardi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Mercredi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Jeudi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Vendredi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Samedi\n    [],\n    // Dimanche\n    [],\n];\n\nasync function main() {\n    try {\n        await client.writeProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE,\n            weeklySchedule,\n            { priority: 16 }\n        );\n\n        node.warn('Écriture WEEKLY_SCHEDULE réussie');\n        node.send({ payload: 'OK' });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
+        "func": "const client = new bacnet.default({ apduTimeout: 10000, broadcastAddress: flow.get('ipBroadcast') });       \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip') + \":\" + flow.get('port') };\n\n// Helper pour créer un objet Date avec l'heure souhaitée\nfunction makeTime(hour, minute) {\n    const d = new Date();\n    d.setHours(hour, minute, 0, 0);\n    return d;\n}\n\nconst weeklySchedule = [\n    // Lundi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Mardi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Mercredi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Jeudi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Vendredi\n    [\n        { time: makeTime(6, 0), value: { type: 4, value: 21.0 } },\n        { time: makeTime(22, 0), value: { type: 4, value: 19.0 } },\n    ],\n    // Samedi\n    [],\n    // Dimanche\n    [],\n];\n\nasync function main() {\n    try {\n        await client.writeProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 1 },\n            bacnet.PropertyIdentifier.WEEKLY_SCHEDULE,\n            weeklySchedule,\n            { priority: 16 }\n        );\n\n        node.warn('Écriture WEEKLY_SCHEDULE réussie');\n        node.send({ payload: 'OK' });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -304,8 +304,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 500,
-        "y": 240,
+        "x": 420,
+        "y": 320,
         "wires": [
             [
                 "de309e95fedd8eeb"
@@ -333,8 +333,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 240,
+        "x": 130,
+        "y": 320,
         "wires": [
             [
                 "fcb358c4348c7995"
@@ -353,8 +353,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 240,
+        "x": 680,
+        "y": 320,
         "wires": []
     },
     {
@@ -362,7 +362,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_ExceptionWrite",
-        "func": "const client = new bacnet.default({ apduTimeout: 4000 });\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '192.168.1.109:47808' };\n\nconst exceptionSchedule = [\n    {\n        date: {\n            type: 10,                        // ApplicationTag.DATE\n            value: new Date(2026, 2, 18),    // mois 0-indexé : 2 = Mars\n        },\n        events: [\n            {\n                time: {\n                    type: 11,                // ApplicationTag.TIME\n                    value: new Date(2026, 2, 10, 8, 0),\n                },\n                value: { type: 4, value: 2.0 },  // ApplicationTag.REAL\n            },\n            {\n                time: {\n                    type: 11,\n                    value: new Date(2026, 2, 10, 18, 0),\n                },\n                value: { type: 4, value: 0.0 },\n            },\n        ],\n        priority: { type: 2, value: 16 },   // ApplicationTag.UNSIGNED_INTEGER\n    }\n];\n\nasync function main() {\n    try {\n        await client.writeProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 5001 },\n            bacnet.PropertyIdentifier.EXCEPTION_SCHEDULE,\n            exceptionSchedule,\n            {}\n        );\n        node.warn(exceptionSchedule);\n        node.warn('Écriture EXCEPTION_SCHEDULE réussie');\n        node.send({ payload: 'OK' });\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
+        "func": "const client = new bacnet.default({ apduTimeout: 10000, broadcastAddress: flow.get('ipBroadcast') });       \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address:flow.get('ip')+\":\"+flow.get('port')};\n\nconst exceptionSchedule = [\n    {\n        date: {\n            type: 10,                        // ApplicationTag.DATE\n            value: new Date(2026, 2, 18),    // mois 0-indexé : 2 = Mars\n        },\n        events: [\n            {\n                time: {\n                    type: 11,                // ApplicationTag.TIME\n                    value: new Date(2026, 2, 10, 8, 0),\n                },\n                value: { type: 4, value: 2.0 },  // ApplicationTag.REAL\n            },\n            {\n                time: {\n                    type: 11,\n                    value: new Date(2026, 2, 10, 18, 0),\n                },\n                value: { type: 4, value: 0.0 },\n            },\n        ],\n        priority: { type: 2, value: 16 },   // ApplicationTag.UNSIGNED_INTEGER\n    }\n];\n\nasync function main() {\n    try {\n        await client.writeProperty(\n            address,\n            { type: bacnet.ObjectType.SCHEDULE, instance: 5001 },\n            bacnet.PropertyIdentifier.EXCEPTION_SCHEDULE,\n            exceptionSchedule,\n            {}\n        );\n        node.warn(exceptionSchedule);\n        node.warn('Écriture EXCEPTION_SCHEDULE réussie');\n        node.send({ payload: 'OK' });\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    } finally {\n        client.close();\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -374,8 +374,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 510,
-        "y": 360,
+        "x": 430,
+        "y": 440,
         "wires": [
             [
                 "503738150d9543e6"
@@ -403,8 +403,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 360,
+        "x": 130,
+        "y": 440,
         "wires": [
             [
                 "05f30c31d8661a10"
@@ -424,8 +424,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 360,
+        "x": 680,
+        "y": 440,
         "wires": []
     },
     {
@@ -433,7 +433,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_client_analogueRead",
-        "func": "const client = new bacnet.default({ apduTimeout: 4000 });\n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address = { address: '172.24.65.10:47808' };\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.ANALOG_VALUE, instance: 1 },\n            bacnet.PropertyIdentifier.PRESENT_VALUE\n        );\n\n        const result = {\n            object: 'analog-value',\n            instance: 1,\n            value: value.values[0]?.value\n        };\n\n        node.warn(JSON.stringify(result, null, 2));\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    }\n}\n\nmain();\nreturn null;",
+        "func": "const client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});  \n\nclient.on('error', (err) => {\n    node.error('Erreur client: ' + err.message);\n    client.close();\n});\n\nconst address ={address:flow.get('ip')+\":\"+flow.get('port')};\n\nasync function main() {\n    try {\n        const value = await client.readProperty(\n            address,\n            { type: bacnet.ObjectType.ANALOG_VALUE, instance: 10000 },\n            bacnet.PropertyIdentifier.PRESENT_VALUE\n        );\n\n        const result = {\n            object: 'analog-value',\n            instance: 1000,\n            value: value.values[0]?.value\n        };\n\n        node.warn(JSON.stringify(result, null, 2));\n        node.send({ payload: result });\n\n    } catch (err) {\n        node.error('Erreur: ' + JSON.stringify(err, Object.getOwnPropertyNames(err)));\n    }\n}\n\nmain();\nreturn null;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -445,8 +445,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 500,
-        "y": 120,
+        "x": 420,
+        "y": 200,
         "wires": [
             [
                 "7a5422edb9ef4ec9"
@@ -474,8 +474,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 120,
+        "x": 130,
+        "y": 200,
         "wires": [
             [
                 "9e1d2d2ad860be3d"
@@ -494,8 +494,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 120,
+        "x": 680,
+        "y": 200,
         "wires": []
     },
     {
@@ -503,7 +503,7 @@
         "type": "function",
         "z": "cbd1f30a3151709a",
         "name": "bacnet_clientClose",
-        "func": "let client = global.get('bacnetClient');\nclient.close();\n",
+        "func": "let client = new bacnet.default({ apduTimeout: 10000 , broadcastAddress: flow.get('ipBroadcast')});       \nclient.close();\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -515,8 +515,8 @@
                 "module": "@bacnet-js/client"
             }
         ],
-        "x": 470,
-        "y": 40,
+        "x": 390,
+        "y": 120,
         "wires": [
             [
                 "3fc31ee4551f6c3e"
@@ -544,8 +544,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
-        "y": 40,
+        "x": 130,
+        "y": 120,
         "wires": [
             [
                 "05925b4a87509e78"
@@ -561,11 +561,30 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "true",
+        "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 40,
+        "x": 680,
+        "y": 120,
         "wires": []
+    },
+    {
+        "id": "a34cd5e9ba25bac9",
+        "type": "function",
+        "z": "cbd1f30a3151709a",
+        "name": "TO CONFIGURE",
+        "func": "msg.config = flow.get('ip') + \":\" + flow.get('port')\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "// Le code ajouté ici sera exécuté une fois\n// à chaque démarrage du noeud.\nflow.set('ip', \"192.168.1.109\");\nflow.set('port', \"47808\");\nflow.set('ipBroadcast', \"192.168.1.255\");\n\n",
+        "finalize": "",
+        "libs": [],
+        "x": 150,
+        "y": 40,
+        "wires": [
+            []
+        ]
     }
 ]
