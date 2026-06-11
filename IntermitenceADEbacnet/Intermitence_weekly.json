@@ -1,0 +1,347 @@
+[
+    {
+        "id": "8b8c11c408535f44",
+        "type": "tab",
+        "label": "Intermitence ADE bacnet",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "95ac5516443c4328",
+        "type": "function",
+        "z": "8b8c11c408535f44",
+        "name": "bacnet_client_WeeklyWrite",
+        "func": "let client = new bacnet.default({\n    apduTimeout: 10000\n});\n\nclient.on('error', (err) => {\n    node.error('BACnet client error: ' + err.message);\n});\n\nnode.on('close', function() {\n    try {\n        client.close();\n    } catch (e) {}\n    global.set('bacnetClient', null);\n});\n\n\nconst schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\n\n\nconst address = {\n    address: currentSchedule.targetip + \":\" + flow.get(\"portdest\")\n};\n\n\nfunction writePropertyAsync(address, objectId, propertyId, value, options) {\n    return new Promise((resolve, reject) => {\n        try {\n            client.writeProperty(\n                address,\n                objectId,\n                propertyId,\n                value,\n                options,\n                (err, value) => {\n                    if (err) {\n                        reject(err);\n                    } else {\n                        resolve(value);\n                    }\n                }\n            );\n        } catch (err) {\n            reject(err);\n        }\n    });\n}\n\n\n\nlet BACNetWeeklySchedulePayload = msg.payload;\n\n\nawait writePropertyAsync(\n    address, \n    {\n        type: bacnet.ObjectType.SCHEDULE,\n        instance: Number(currentSchedule.scheduleid)\n    },\n    bacnet.PropertyIdentifier.WEEKLY_SCHEDULE,\n    BACNetWeeklySchedulePayload, \n    {}\n        \n);\nclient.close();\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 1300,
+        "y": 140,
+        "wires": [
+            [
+                "936074287b44c978"
+            ]
+        ]
+    },
+    {
+        "id": "936074287b44c978",
+        "type": "debug",
+        "z": "8b8c11c408535f44",
+        "name": "debug ExeptionWrite",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1560,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "2e419911e117d123",
+        "type": "function",
+        "z": "8b8c11c408535f44",
+        "name": "TO CONFIGURE",
+        "func": "flow.set('portdest', \"47808\");\nflow.set('sourcePort',\"48809\");\nflow.set('UTCoffset',2);\nflow.set('ipBroadcast',\"255.255.255.255\");\nflow.set('schedulesParameters',\n[\n{  \n    url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n    scheduleid : 1,\n    targetip : \"192.168.1.109\",\n    exceptionvalue : 1,\n    defaultvalue : 0,\n    inertiatime : 30,\n    preheattime : 120\n}\n])\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 210,
+        "y": 40,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5bc1ce803b1a8eb6",
+        "type": "inject",
+        "z": "8b8c11c408535f44",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 65,
+        "y": 40,
+        "wires": [
+            [
+                "2e419911e117d123"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "5472d4457f2218e6",
+        "type": "function",
+        "z": "8b8c11c408535f44",
+        "name": "room queue",
+        "func": "let schedules = flow.get('schedulesParameters');\n\nfor (let j = 0; j < schedules.length;j++)\n{\n    msg.url = schedules[j].url;\n    msg.nbr = j;\n    node.send(msg); \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 190,
+        "y": 140,
+        "wires": [
+            [
+                "62ccb7d5d2948770"
+            ]
+        ]
+    },
+    {
+        "id": "87ed255adfc80f50",
+        "type": "debug",
+        "z": "8b8c11c408535f44",
+        "name": "debug room calendar",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "9384bf6c5c5623fb",
+        "type": "debug",
+        "z": "8b8c11c408535f44",
+        "name": "debug  room queue",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 630,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "49af2e7f99c3ccba",
+        "type": "inject",
+        "z": "8b8c11c408535f44",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "43200",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 65,
+        "y": 140,
+        "wires": [
+            [
+                "5472d4457f2218e6"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "62ccb7d5d2948770",
+        "type": "delay",
+        "z": "8b8c11c408535f44",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 400,
+        "y": 140,
+        "wires": [
+            [
+                "7d5642c21213d11d",
+                "9384bf6c5c5623fb"
+            ]
+        ]
+    },
+    {
+        "id": "06744aa9216be5b2",
+        "type": "delay",
+        "z": "8b8c11c408535f44",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 820,
+        "y": 140,
+        "wires": [
+            [
+                "654f1b431daca02a"
+            ]
+        ]
+    },
+    {
+        "id": "654f1b431daca02a",
+        "type": "function",
+        "z": "8b8c11c408535f44",
+        "name": "InterpretSchedule",
+        "func": "const schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\nconst events = msg.payload;\nconst nbrEvents = events.length;\n\nif (events.length === 0) {\n    node.warn('No events to process');\n    return msg;\n}\n\nfunction addHours(date, h) {\n    return new Date(new Date(date).getTime() + (h * 60 * 60 * 1000));\n}\n\nfunction addMinutes(date, m) {\n    return new Date(new Date(date).getTime() + (m * 60 * 1000));\n}\n\n\nlet weeklySchedule = [\n    [],\n    [],\n    [],\n    [],\n    [],\n    [],\n    []\n];\n\nlet dailyEventsCounter = [\n    0,\n    0,\n    0,\n    0,\n    0,\n    0,\n    0,\n];\nnode.warn(nbrEvents + \" events to process\")\nfor (let i = 0; i < nbrEvents; i++) {\n    const evt = events[i];\n    const date = addHours(evt.eventStart, flow.get(\"UTCoffset\") || 0);\n    const timestart = addMinutes(addHours(evt.eventStart, flow.get(\"UTCoffset\") || 0), -currentSchedule.preheattime);\n    const timeend = addMinutes(addHours(evt.eventEnd, flow.get(\"UTCoffset\") || 0), -currentSchedule.inertiatime);;\n\n\n    let dateStart = new Date;\n    dateStart.setFullYear(date.getFullYear());\n    dateStart.setMonth(date.getMonth());\n    dateStart.setDate(date.getDate());\n    dateStart.setHours(timestart.getHours());\n    dateStart.setMinutes(timestart.getMinutes());\n    dateStart.setSeconds(timeend.getSeconds())\n    dateStart.setMilliseconds(timeend.getMilliseconds())\n\n    weeklySchedule[(date.getDay() + 6) % 7][dailyEventsCounter[(date.getDay() + 6) % 7]] = {\n        time: {\n            type: bacnet.ApplicationTag.TIME,\n            value: dateStart\n        },\n        value: {\n            type : bacnet.ApplicationTag.UNSIGNED_INTEGER,\n            value: currentSchedule.exceptionvalue\n        }\n    }\n    dailyEventsCounter[(date.getDay() + 6) % 7] = dailyEventsCounter[(date.getDay() + 6) % 7] + 1;\n\n    \n    let dateEnd = new Date;\n    dateEnd.setFullYear(date.getFullYear());\n    dateEnd.setMonth(date.getMonth());\n    dateEnd.setDate(date.getDate());\n    dateEnd.setHours(timeend.getHours());\n    dateEnd.setMinutes(timeend.getMinutes());\n    dateEnd.setSeconds(timeend.getSeconds())\n    dateEnd.setMilliseconds(timeend.getMilliseconds())\n\n    weeklySchedule[(date.getDay() + 6) % 7][dailyEventsCounter[(date.getDay() + 6) % 7]] = {\n        time: {\n            type: bacnet.ApplicationTag.TIME,\n            value: dateEnd\n        },\n        value: {\n            type: bacnet.ApplicationTag.UNSIGNED_INTEGER,\n            value: currentSchedule.defaultvalue\n        }\n    }\n    dailyEventsCounter[(date.getDay() + 6) % 7] = dailyEventsCounter[(date.getDay() + 6) % 7] + 1\n}\n\n\nfor (let j = 0; j < 7; j++) {\n    let i = 1;\n    node.warn(\"DAY \" + j + \" \" + weeklySchedule[j].length + \" events to filter.\");\n    while (i < weeklySchedule[j].length)\n    {\n       \n        if (weeklySchedule[j][i].time.value < weeklySchedule[j][i-1].time.value)\n        {\n            node.warn(\"detected events to remove : \" + (i-1) + \" and \" + (i));\n            for (let k = i-1; k < (weeklySchedule[j].length-2); k++)\n            {\n                weeklySchedule[j][k] = weeklySchedule[j][k+2]     \n            }\n            weeklySchedule[j].pop();\n            weeklySchedule[j].pop();\n            \n        }\n        else\n        {\n            i++;\n        } \n    }\n}\nnode.warn(\"dailyEventsCounter = \"+ dailyEventsCounter);\nmsg.payload = weeklySchedule;\nnode.send(msg);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 1030,
+        "y": 140,
+        "wires": [
+            [
+                "b6ea352a25997e5c",
+                "95ac5516443c4328"
+            ]
+        ]
+    },
+    {
+        "id": "b6ea352a25997e5c",
+        "type": "debug",
+        "z": "8b8c11c408535f44",
+        "name": "debug room calendar",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1240,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "7d5642c21213d11d",
+        "type": "ical-upcoming",
+        "z": "8b8c11c408535f44",
+        "confignode": "f73555ac13078ac6",
+        "timeout": "0",
+        "timeoutUnits": "days",
+        "cron": "",
+        "name": "Get Room calendar",
+        "offsettype": "",
+        "offset": "",
+        "offsetUnitstype": "",
+        "offsetUnits": "",
+        "eventtypes": "events",
+        "eventtypestype": "eventtypes",
+        "calendar": "",
+        "calendartype": "str",
+        "triggertype": "trigger",
+        "trigger": "always",
+        "timezone": "UTC",
+        "timezonetype": "str",
+        "dateformat": "{ \"timeStyle\": \"short\", \"dateStyle\": \"short\" }",
+        "dateformattype": "json",
+        "language": "en",
+        "languagetype": "language",
+        "filterProperty": "summary",
+        "filterPropertytype": "filterProperty",
+        "filterOperator": "between",
+        "filterOperatortype": "filterOperator",
+        "filtertype": "str",
+        "filter2type": "str",
+        "filter2": "",
+        "filter": "",
+        "checkall": false,
+        "endpreview": "",
+        "endpreviewUnits": "",
+        "previewtype": "num",
+        "preview": "7",
+        "previewUnitstype": "previewUnits",
+        "previewUnits": "days",
+        "pastviewtype": "num",
+        "pastview": "0",
+        "pastviewUnits": "days",
+        "pastviewUnitstype": "pastviewUnits",
+        "x": 610,
+        "y": 140,
+        "wires": [
+            [
+                "87ed255adfc80f50",
+                "06744aa9216be5b2"
+            ]
+        ]
+    },
+    {
+        "id": "f73555ac13078ac6",
+        "type": "ical-config",
+        "url": "",
+        "caldav": "",
+        "caltype": "ical",
+        "name": "",
+        "replacedates": false,
+        "usecache": false,
+        "username": "",
+        "password": "",
+        "experimental": false,
+        "calendar": "",
+        "pastWeeks": "0",
+        "futureWeeks": "4"
+    },
+    {
+        "id": "ab98efc07076e14e",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-ical-events": "2.2.5"
+        }
+    }
+]
