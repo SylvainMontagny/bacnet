@@ -1,0 +1,576 @@
+[
+    {
+        "id": "68df1b2051f987d1",
+        "type": "tab",
+        "label": "Intermitence ADE bacnet",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2ec6642db9ef75de",
+        "type": "group",
+        "z": "68df1b2051f987d1",
+        "name": "CONFIGURATION",
+        "style": {
+            "stroke": "#000000",
+            "label": true,
+            "color": "#000000",
+            "fill": "#ffefbf"
+        },
+        "nodes": [
+            "16841d2565a06949",
+            "e56ec44d40d26d7b"
+        ],
+        "x": 24,
+        "y": 19,
+        "w": 322,
+        "h": 82
+    },
+    {
+        "id": "05d9c4c7784ed0bb",
+        "type": "group",
+        "z": "68df1b2051f987d1",
+        "name": "USUAL PLANNING",
+        "style": {
+            "stroke": "#000000",
+            "fill": "#bfdbef",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "bbb7c0e9b95b6e2b",
+            "559328323a6a442f",
+            "707fba008a067e49",
+            "df9fcda9fe11a31c",
+            "974620753f31a1bb",
+            "de491efea24cc747",
+            "ccae197433d97e7b",
+            "167f164a0a53cdd0",
+            "67053330884a2aae",
+            "27baa0968039cbc4",
+            "da359f74e4cba94b",
+            "3ada28871e4a76ef"
+        ],
+        "x": 14,
+        "y": 119,
+        "w": 1492,
+        "h": 162
+    },
+    {
+        "id": "052012250365c0d3",
+        "type": "group",
+        "z": "68df1b2051f987d1",
+        "name": "EMERGENCY PLANNING",
+        "style": {
+            "stroke": "#000000",
+            "fill": "#ffbfbf",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "99f0463b4ff4aa23",
+            "66a36bf656e8c2b7",
+            "84531f3523c890ad",
+            "25eb5530744892bd",
+            "601349a6b8ed8d49",
+            "a955b9575bb115bb"
+        ],
+        "x": 24,
+        "y": 299,
+        "w": 1042,
+        "h": 122
+    },
+    {
+        "id": "bbb7c0e9b95b6e2b",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "bacnet_client_WeeklyWrite",
+        "func": "/* Initialisation du client BACnet */\nlet client = new bacnet.default({\n    apduTimeout: 10000\n});\n\nclient.on('error', (err) => {\n    node.error('BACnet client error: ' + err.message);\n});\n\nnode.on('close', function() {\n    try {\n        client.close();\n    } catch (e) {}\n});\n\n/* Récupération des paramètres saisis dans le node \"TO CONFIGURE\" */\nconst schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\n\n/*Adresse de l'automate cible */\nconst address = {\n    address: currentSchedule.targetip + \":\" + flow.get(\"portdest\")\n};\n\n/*Fonction d'écriture dans la propriété WEEKLY_SCHEDULE de l'objet schedule avec l'ID saisi en paramètre.*/\nfunction writePropertyAsync(address, objectId, propertyId, value, options) {\n    return new Promise((resolve, reject) => {\n        try {\n            client.writeProperty(\n                address,\n                objectId,\n                propertyId,\n                value,\n                options,\n                (err, value) => {\n                    if (err) {\n                        reject(err);\n                    } else {\n                        resolve(value);\n                    }\n                }\n            );\n        } catch (err) {\n            reject(err);\n        }\n    });\n}\n/*Récupération des évenements traités par le node \"InterpretSchedule\" */\nlet BACNetWeeklySchedulePayload = msg.payload;\n\nawait writePropertyAsync(\n    address, \n    {\n        type: bacnet.ObjectType.SCHEDULE,\n        instance: Number(currentSchedule.scheduleid)\n    },\n    bacnet.PropertyIdentifier.WEEKLY_SCHEDULE,\n    BACNetWeeklySchedulePayload, \n    {}\n        \n);\nclient.close();\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 1360,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "16841d2565a06949",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "2ec6642db9ef75de",
+        "name": "TO CONFIGURE",
+        "func": "/* Port de communication BACnet (47808) par défaut*/ \nflow.set('portdest', \"47808\");\n/* Décalage par rapport au temps UTC en heures*/ \nflow.set('UTCoffset',2);\n/* Adresse de broadcast*/ \nflow.set('ipBroadcast',\"255.255.255.255\");\n\n/* Heure de début (planning d'urgence) */\n\nflow.set('emergencystarthour',1);\n\n/* Heure de fin (planning d'urgence) */\n\nflow.set('emergencyendhour',22);\n\n/* \nParamètre des liens entre calendrier et schedules,les paramètres saisis pour chaque indice du tableau doit etre les suivant : \n\nurl : saisir l'url du calendrier que l'on souhaite lier a l'objet schedule\nscheduleid : ID du schedule sur lequel on souhaite écrire\nvaluetype : Type de donnée de la valeur que l'on souhaite écrire, dit etre un de types éfinis pas la library bacnet-js/client\nexceptionvalue : Valeur que le schedule prend durant les évenements\ndefaultvalue : Valeur que le schedule prend en dehors des évenements\ninertiatime : Durée en minutes pour que le chauffage s'éteigne avant la fin de chaque évènement pour profiter de l'inertie thermique\npreheattime : Durée en minutes pour que le chauffage s'allume avant le début de chaque évènement pour préchauffer \n\nUn exemple d'indice complet est donc le suivant : \n{\n    url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n    scheduleid : 1,\n    targetip : \"192.168.1.109\",\n    valuetype : bacnet.ApplicationTag.UNSIGNED_INTEGER,\n    exceptionvalue : 1,\n    defaultvalue : 0,\n    inertiatime : 30,\n    preheattime : 120\n}\n\nCe paramètre doit etre un tableau pouvant contenir n'importe quel nombre d'indice.\n\nL'entièreté de ces paramètres doivent etre saisis pour chaque indice du tableau. \n\n*/ \nflow.set('schedulesParameters',\n[\n    {  //erreur pour tester robustesse\n        url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n   scheduleid: 1,\n        targetip: \"192.168.1.107\",\n        valuetype: bacnet.ApplicationTag.UNSIGNED_INTEGER,\n        occupiedvalue: 1,\n        defaultvalue: 0,\n        inertiatime: 30,\n        preheattime: 120\n    },\n    {//B8Br\n        url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n   scheduleid: 5,\n        targetip: \"192.168.101.110\",\n        valuetype: bacnet.ApplicationTag.ENUMERATED,\n        occupiedvalue: 1,\n        defaultvalue: 0,\n        inertiatime: 30,\n        preheattime: 120\n    },\n    {  //B8Bn\n        url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n   scheduleid: 1,\n        targetip: \"192.168.101.110\",\n        valuetype: bacnet.ApplicationTag.ENUMERATED,\n        occupiedvalue: 1,\n        defaultvalue: 0,\n        inertiatime: 30,\n        preheattime: 120\n    },\n    {//B8D_ancien\n        url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n       scheduleid: 2,\n        targetip: \"192.168.101.25\",\n        valuetype: bacnet.ApplicationTag.UNSIGNED_INTEGER,\n        occupiedvalue: 4,\n        defaultvalue: null,\n        inertiatime: 30,\n        preheattime: 120\n    },\n    {//B9G150\n        url: \"https://ade-usmb-ro.grenet.fr/jsp/custom/modules/plannings/direct_cal.jsp?data=b5cfb898a9c27be94975c12c6eb30e9233bdfae22c1b52e2cd88eb944acf5364c69e3e5921f4a6ebe36e93ea9658a08f,1&resources=5373&projectId=5&calType=ical&lastDate=2042-08-14\",\n        scheduleid: 7,\n        targetip: \"192.168.101.151\",\n        valuetype: bacnet.ApplicationTag.UNSIGNED_INTEGER,\n        occupiedvalue: 2,\n        defaultvalue: 1,\n        inertiatime: 30,\n        preheattime: 120\n    }\n])\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 230,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e56ec44d40d26d7b",
+        "type": "inject",
+        "z": "68df1b2051f987d1",
+        "g": "2ec6642db9ef75de",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 85,
+        "y": 60,
+        "wires": [
+            [
+                "16841d2565a06949"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "559328323a6a442f",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "room queue",
+        "func": "let schedules = flow.get('schedulesParameters');\n\n/* Organise les commandes pour un envoi séquentiel, \nles éléments sont envoyées dans l'ordre des indices du tableau : 0,1,2... \nUn numéro de message est attribué au path msg.nbr*/ \n\nfor (let j = 0; j < schedules.length;j++)\n{\n    msg.url = schedules[j].url;\n    msg.nbr = j;\n    node.send(msg); \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 250,
+        "y": 200,
+        "wires": [
+            [
+                "df9fcda9fe11a31c"
+            ]
+        ]
+    },
+    {
+        "id": "27baa0968039cbc4",
+        "type": "debug",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "debug room calendar",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "707fba008a067e49",
+        "type": "inject",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "43200",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 75,
+        "y": 200,
+        "wires": [
+            [
+                "559328323a6a442f"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "df9fcda9fe11a31c",
+        "type": "delay",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 440,
+        "y": 200,
+        "wires": [
+            [
+                "de491efea24cc747"
+            ]
+        ]
+    },
+    {
+        "id": "974620753f31a1bb",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "InterpretSchedule",
+        "func": "/* Interprete et traite les informations reçues par le node \"Get Room Calendar\" */\n\nconst schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\nconst events = msg.payload;\nconst nbrEvents = events.length;\nconst valueType = currentSchedule.valuetype;\n\nif (events.length === 0) {\n    node.warn('No events to process');\n    let weeklySchedule =\n        [\n            [],\n            [],\n            [],\n            [],\n            [],\n            [],\n            [],\n        ]\n    msg.payload = weeklySchedule;\n    node.send(msg);\n}\n\n/* Ajoute un nombre d'heures souahité \"h\" a un objet de type Date, peut ètre negatif  */\nfunction addHours(date, h) {\n    return new Date(new Date(date).getTime() + (h * 60 * 60 * 1000));\n}\n\n/* Ajoute un nombre de minutes souahité \"m\" a un objet de type Date, peut ètre negatif */\nfunction addMinutes(date, m) {\n    return new Date(new Date(date).getTime() + (m * 60 * 1000));\n}\n\n/* Tableau dans lequel les évènements vont etre placés, une liste par jour de la semaine.*/\nlet weeklySchedule = [\n    [],\n    [],\n    [],\n    [],\n    [],\n    [],\n    []\n];\n\n/* Tableau permettant de connaitre le nombre d'évenements par jour de la semaine.*/\nlet dailyEventsCounter = [\n    0,\n    0,\n    0,\n    0,\n    0,\n    0,\n    0,\n];\n/*Création des évènements, chaque évènement est construit a partir de deux horraires : début et fin*/\nnode.warn(nbrEvents + \" events to process\")\nfor (let i = 0; i < nbrEvents; i++) {\n\n    /*Récupération des paramètres saisis dans le node \"TO CONFIGURE\"*/\n    const evt = events[i];\n\n    /*Ajout du décalage horraire UTC */\n    const date = addHours(evt.eventStart, flow.get(\"UTCoffset\") || 0);\n    /*Décalage lié au temps de préchauffe saisi en paramètre */\n    const timestart = addMinutes(addHours(evt.eventStart, flow.get(\"UTCoffset\") || 0), -currentSchedule.preheattime);\n    /*Décalage lié au temps d'inertie saisi en paramètre */\n    const timeend = addMinutes(addHours(evt.eventEnd, flow.get(\"UTCoffset\") || 0), -currentSchedule.inertiatime);\n    /*Création date de début d'évènement*/\n    let dateStart = new Date;\n    dateStart.setFullYear(date.getFullYear());\n    dateStart.setMonth(date.getMonth());\n    dateStart.setDate(date.getDate());\n    dateStart.setHours(timestart.getHours());\n    dateStart.setMinutes(timestart.getMinutes());\n    dateStart.setSeconds(timestart.getSeconds())\n    dateStart.setMilliseconds(timestart.getMilliseconds())\n    weeklySchedule[(date.getDay() + 6) % 7][dailyEventsCounter[(date.getDay() + 6) % 7]] = {\n        time: {\n            type: bacnet.ApplicationTag.TIME,\n            value: dateStart\n        },\n        value: {\n            /*Type saisi en paramètre*/\n            type: valueType,\n            /*Valeur saisie en paramètre*/\n            value: currentSchedule.occupiedvalue\n        }\n    }\n    /*Index le lundi en premier jour de la semaine, le get room calendar ayant le dimanche en premier indice*/\n    dailyEventsCounter[(date.getDay() + 6) % 7] = dailyEventsCounter[(date.getDay() + 6) % 7] + 1;\n\n    /*Création date de fin d'évènement*/\n    let dateEnd = new Date;\n    dateEnd.setFullYear(date.getFullYear());\n    dateEnd.setMonth(date.getMonth());\n    dateEnd.setDate(date.getDate());\n    dateEnd.setHours(timeend.getHours());\n    dateEnd.setMinutes(timeend.getMinutes());\n    dateEnd.setSeconds(timeend.getSeconds())\n    dateEnd.setMilliseconds(timeend.getMilliseconds())\n    weeklySchedule[(date.getDay() + 6) % 7][dailyEventsCounter[(date.getDay() + 6) % 7]] = {\n        time: {\n            type: bacnet.ApplicationTag.TIME,\n            value: dateEnd\n        },\n        value: {\n            /*Type saisi en paramètre*/\n            type: valueType,\n            /*Valeur saisie en paramètre*/\n            value: currentSchedule.defaultvalue\n        }\n    }\n    /*Index le lundi en premier jour de la semaine, le get room calendar ayant le dimanche en premier indice*/\n    dailyEventsCounter[(date.getDay() + 6) % 7] = dailyEventsCounter[(date.getDay() + 6) % 7] + 1\n}\n\n\n/*Fusion des évènements si chevauchement de périodes*/\n\n/*Le code parcours les jours j */\nfor (let j = 0; j < 7; j++) {\n    let i = 1;\n    node.warn(\"DAY \" + j + \" \" + weeklySchedule[j].length + \" events to filter.\");\n    /*Pour chaque évenement, on verifie que la fin de l'évenement précédent est anterieur ou égale au début de l'évenement actuel,\n    dans le cas contraire, les indice de début de fin se chevauchant sont suprimés.*/\n    while (i < weeklySchedule[j].length)\n    {  \n        if (weeklySchedule[j][i].time.value >= weeklySchedule[j][i-1].time.value)\n        {\n            i++;\n        }\n        else\n        {\n            node.warn(\"detected events to remove : \" + (i-1) + \" and \" + (i));\n            for (let k = i-1; k < (weeklySchedule[j].length-2); k++)\n            {\n                weeklySchedule[j][k] = weeklySchedule[j][k+2]     \n            }\n            weeklySchedule[j].pop();\n            weeklySchedule[j].pop();\n        } \n    }\n}\nnode.warn(\"dailyEventsCounter = \"+ dailyEventsCounter);\n/*Transmission au node de communication BACnet */\nmsg.payload = weeklySchedule;\nnode.send(msg);",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 890,
+        "y": 200,
+        "wires": [
+            [
+                "da359f74e4cba94b",
+                "67053330884a2aae"
+            ]
+        ]
+    },
+    {
+        "id": "da359f74e4cba94b",
+        "type": "debug",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "debug room calendar",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1120,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "de491efea24cc747",
+        "type": "ical-upcoming",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "confignode": "f73555ac13078ac6",
+        "timeout": "",
+        "timeoutUnits": "days",
+        "cron": "",
+        "name": "Get Room Calendar",
+        "offsettype": "",
+        "offset": "",
+        "offsetUnitstype": "",
+        "offsetUnits": "",
+        "eventtypes": "events",
+        "eventtypestype": "eventtypes",
+        "calendar": "",
+        "calendartype": "str",
+        "triggertype": "trigger",
+        "trigger": "always",
+        "timezone": "UTC",
+        "timezonetype": "str",
+        "dateformat": "{ \"timeStyle\": \"short\", \"dateStyle\": \"short\" }",
+        "dateformattype": "json",
+        "language": "en",
+        "languagetype": "language",
+        "filterProperty": "summary",
+        "filterPropertytype": "filterProperty",
+        "filterOperator": "between",
+        "filterOperatortype": "filterOperator",
+        "filtertype": "str",
+        "filter2type": "str",
+        "filter2": "",
+        "filter": "",
+        "checkall": false,
+        "endpreview": "",
+        "endpreviewUnits": "",
+        "previewtype": "num",
+        "preview": "6",
+        "previewUnitstype": "previewUnits",
+        "previewUnits": "days",
+        "pastviewtype": "num",
+        "pastview": "0",
+        "pastviewUnits": "days",
+        "pastviewUnitstype": "pastviewUnits",
+        "x": 660,
+        "y": 200,
+        "wires": [
+            [
+                "27baa0968039cbc4",
+                "974620753f31a1bb"
+            ]
+        ]
+    },
+    {
+        "id": "ccae197433d97e7b",
+        "type": "comment",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "Get Room Calendar comment",
+        "info": "Récupere les évenements du calendrier dont le lien est saisi en parametre.\nLa portée doit etre de 6 jours ou moins, car dans le cas contraire, en raison de l'utilisation de la propriété WEEKLY_SCHEDULE,\ndes évenements de semaines ulterieures peuvent écraser ceux de la semaine en cours.\n\nUne portée de 6 jours implique une lecture du jour en cours et des 6 suivants.\n\nLe paramètre \"check every\" dit etre mis a 0 afin que les lectures occurent uniquement lors de la reception d'un message.",
+        "x": 660,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "167f164a0a53cdd0",
+        "type": "comment",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "Inject comment",
+        "info": "Execute le flow a un interval défini dans le node,\npar défaut toute les 12 heures.",
+        "x": 120,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "67053330884a2aae",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "testValableTarget",
+        "func": "/*Essaye de réaliser un read sur le schedule cible avant écriture, afin de prévenir les\neventuels problèmes lors de tentatives d'écritures sur objets ou automates inexistants */\n\nlet client = new bacnet.default({\n    apduTimeout: 10000\n});\n\nclient.on('error', (err) => {\n    node.error('BACnet client error: ' + err.message);\n});\n\nnode.on('close', function() {\n    try {\n        client.close();\n    } catch (e) {}\n});\n\n/* Récupération des paramètres saisis dans le node \"TO CONFIGURE\" */\nconst schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\nconst valueType = currentSchedule.valuetype;\n\n/*Adresse de l'automate cible */\nconst address = {\n    address: currentSchedule.targetip + \":\" + flow.get(\"portdest\")\n};\n\ntry{\n    const value = await client.readProperty(\n        address, {\n            type:  bacnet.ObjectType.SCHEDULE,\n            instance: Number(currentSchedule.scheduleid)\n        },\n        bacnet.PropertyIdentifier.WEEKLY_SCHEDULE\n    );\n\n    /*let result = {\n        instance: Number(currentSchedule.scheduleid),\n        value: value.values[0].value\n    };*/\n\n    node.warn(\"read success\");\n    return msg;\n}\ncatch\n{\n    node.error(\"specified schedule not found, adress :  \" + address + \" ID : \" +  Number(currentSchedule.scheduleid));\n}\n\n\n\n\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 1110,
+        "y": 200,
+        "wires": [
+            [
+                "bbb7c0e9b95b6e2b",
+                "3ada28871e4a76ef"
+            ]
+        ]
+    },
+    {
+        "id": "3ada28871e4a76ef",
+        "type": "debug",
+        "z": "68df1b2051f987d1",
+        "g": "05d9c4c7784ed0bb",
+        "name": "debug test valable target",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1350,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "99f0463b4ff4aa23",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "052012250365c0d3",
+        "name": "room queue",
+        "func": "let schedules = flow.get('schedulesParameters');\n\n/* Organise les commandes pour un envoi séquentiel, \nles éléments sont envoyées dans l'ordre des indices du tableau : 0,1,2... \nUn numéro de message est attribué au path msg.nbr*/ \n\nfor (let j = 0; j < schedules.length;j++)\n{\n    msg.url = schedules[j].url;\n    msg.nbr = j;\n    node.send(msg); \n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 340,
+        "wires": [
+            [
+                "66a36bf656e8c2b7"
+            ]
+        ]
+    },
+    {
+        "id": "66a36bf656e8c2b7",
+        "type": "delay",
+        "z": "68df1b2051f987d1",
+        "g": "052012250365c0d3",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "3",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 460,
+        "y": 340,
+        "wires": [
+            [
+                "25eb5530744892bd"
+            ]
+        ]
+    },
+    {
+        "id": "84531f3523c890ad",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "052012250365c0d3",
+        "name": "bacnet_client_WeeklyWrite",
+        "func": "/* Initialisation du client BACnet */\nlet client = new bacnet.default({\n    apduTimeout: 10000\n});\n\nclient.on('error', (err) => {\n    node.error('BACnet client error: ' + err.message);\n});\n\nnode.on('close', function() {\n    try {\n        client.close();\n    } catch (e) {}\n});\n\n/* Récupération des paramètres saisis dans le node \"TO CONFIGURE\" */\nconst schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\nconst valueType = currentSchedule.valuetype;\n/*Adresse de l'automate cible */\nconst address = {\n    address: currentSchedule.targetip + \":\" + flow.get(\"portdest\")\n};\n\n/*Fonction d'écriture dans la propriété WEEKLY_SCHEDULE de l'objet schedule avec l'ID saisi en paramètre.*/\nfunction writePropertyAsync(address, objectId, propertyId, value, options) {\n    return new Promise((resolve, reject) => {\n        try {\n            client.writeProperty(\n                address,\n                objectId,\n                propertyId,\n                value,\n                options,\n                (err, value) => {\n                    if (err) {\n                        reject(err);\n                    } else {\n                        resolve(value);\n                    }\n                }\n            );\n        } catch (err) {\n            reject(err);\n        }\n    });\n}\n/*Récupération des évenements traités par le node \"InterpretSchedule\" */\nlet BACNetWeeklySchedulePayload = \n[\n    [\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencystarthour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.occupiedvalue },\n        },\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencyendhour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.defaultvalue },\n        }\n    ],\n    [\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencystarthour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.occupiedvalue },\n        },\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencyendhour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.defaultvalue },\n        }\n    ],\n    [\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencystarthour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.occupiedvalue },\n        },\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencyendhour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.defaultvalue },\n        }\n    ],\n    [\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencystarthour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.occupiedvalue },\n        },\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencyendhour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.defaultvalue },\n        }\n    ],\n    [\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencystarthour'), 0),\n            },\n            value: { type: valueType, value: currentSchedule.occupiedvalue },\n        },\n        {\n            time: {\n                type: bacnet.ApplicationTag.TIME,\n                value: new Date(2026, 4, 25, flow.get('emergencyendhour'),0),\n            },\n            value: { type: valueType, value: currentSchedule.defaultvalue },\n        }\n    ],\n    [],\n    [],\n]\n\nawait writePropertyAsync(\n    address, \n    {\n        type: bacnet.ObjectType.SCHEDULE,\n        instance: Number(currentSchedule.scheduleid)\n    },\n    bacnet.PropertyIdentifier.WEEKLY_SCHEDULE,\n    BACNetWeeklySchedulePayload, \n    {}\n        \n);\nclient.close();\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 920,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "25eb5530744892bd",
+        "type": "function",
+        "z": "68df1b2051f987d1",
+        "g": "052012250365c0d3",
+        "name": "testValableTarget",
+        "func": "/*Essaye de réaliser un read sur le schedule cible avant écriture, afin de prévenir les\neventuels problèmes lors de tentatives d'écritures sur objets ou automates inexistants */\n\nlet client = new bacnet.default({\n    apduTimeout: 10000\n});\n\nclient.on('error', (err) => {\n    node.error('BACnet client error: ' + err.message);\n});\n\nnode.on('close', function() {\n    try {\n        client.close();\n    } catch (e) {}\n});\n\n/* Récupération des paramètres saisis dans le node \"TO CONFIGURE\" */\nconst schedules = flow.get('schedulesParameters');\nconst currentSchedule = schedules[msg.nbr];\nconst valueType = currentSchedule.valuetype;\n\n/*Adresse de l'automate cible */\nconst address = {\n    address: currentSchedule.targetip + \":\" + flow.get(\"portdest\")\n};\n\ntry{\n    const value = await client.readProperty(\n        address, {\n            type:  bacnet.ObjectType.SCHEDULE,\n            instance: Number(currentSchedule.scheduleid)\n        },\n        bacnet.PropertyIdentifier.WEEKLY_SCHEDULE\n    );\n\n    /*let result = {\n        instance: Number(currentSchedule.scheduleid),\n        value: value.values[0].value\n    };*/\n\n    node.warn(\"read success\");\n    return msg;\n}\ncatch\n{\n    node.error(\"specified schedule not found, adress :  \" + address + \" ID : \" +  Number(currentSchedule.scheduleid));\n}\n\n\n\n\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "bacnet",
+                "module": "@bacnet-js/client"
+            }
+        ],
+        "x": 670,
+        "y": 340,
+        "wires": [
+            [
+                "84531f3523c890ad"
+            ]
+        ]
+    },
+    {
+        "id": "601349a6b8ed8d49",
+        "type": "comment",
+        "z": "68df1b2051f987d1",
+        "g": "052012250365c0d3",
+        "name": "Emergency planning",
+        "info": "Crée un planning d'urgence du lundi au vendredi, les horraires de début et de fin sont déclarées\ndans le node \"TO CONFIGURE\"\n\nPour démarer le planning d'urgence, utiliser le node inject",
+        "x": 150,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "a955b9575bb115bb",
+        "type": "inject",
+        "z": "68df1b2051f987d1",
+        "g": "052012250365c0d3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "0.5",
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 85,
+        "y": 340,
+        "wires": [
+            [
+                "99f0463b4ff4aa23"
+            ]
+        ],
+        "l": false
+    },
+    {
+        "id": "f73555ac13078ac6",
+        "type": "ical-config",
+        "url": "",
+        "caldav": "",
+        "caltype": "ical",
+        "name": "",
+        "replacedates": false,
+        "usecache": false,
+        "username": "",
+        "password": "",
+        "experimental": false,
+        "calendar": "",
+        "pastWeeks": "0",
+        "futureWeeks": "4"
+    },
+    {
+        "id": "778595bfb4787a0b",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-ical-events": "2.2.5"
+        }
+    }
+]

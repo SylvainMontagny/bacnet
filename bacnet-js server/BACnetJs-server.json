@@ -1,0 +1,61 @@
+[
+    {
+        "id": "bacnet_tab_01",
+        "type": "tab",
+        "label": "BACnet Server",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "bacnet_srv_01",
+        "type": "function",
+        "z": "bacnet_tab_01",
+        "name": "BACnet Server",
+        "func": "\nconst mod = bacnetJsDevice;\nconst { BDDevice, BDAnalogInput, BDBinaryValue } = mod;\n\nconst device = new BDDevice(112233, { port: 47808, interface: '192.168.1.117', name: 'Server-BACnetJs' });\nconst AV = device.addObject(new BDAnalogInput(0, 'AnalogValue1'));\nconst BV = device.addObject(new BDBinaryValue(0, 'BinaryValue1'));\nAV.presentValue = 25;\n\nnode.status({ fill: 'green', shape: 'dot', text: 'device 112233 :47808' });\nnode.warn(\"BACnet server started\");",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "const d = global.get('bacnetDevice');\nif (d) { try { d.destroy(); } catch(e) {} global.set('bacnetDevice', null); }",
+        "libs": [
+            {
+                "var": "bacnetJsDevice",
+                "module": "@bacnet-js/device"
+            }
+        ],
+        "x": 400,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dc4dc4fbf2bef9f5",
+        "type": "inject",
+        "z": "bacnet_tab_01",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 120,
+        "wires": [
+            [
+                "bacnet_srv_01"
+            ]
+        ]
+    }
+]
