@@ -1,0 +1,14 @@
+{
+  "name": "bacnet-server-example",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Standalone JavaScript example for running a BACnet/IP server with @bacnet-js/device",
+  "main": "bacnet-server.js",
+  "scripts": {
+    "start": "node bacnet-server.js"
+  },
+  "dependencies": {
+    "@bacnet-js/client": "^3.3.2",
+    "@bacnet-js/device": "^0.8.0"
+  }
+}
